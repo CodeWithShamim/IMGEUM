@@ -1,0 +1,12 @@
+{
+  "31337": {
+    "arrearsAttestor": "0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496",
+    "attesterId": "0xaa92f8c143657dde575de430aecaea6ca91f2e6072339b16932d426895d8d678",
+    "chainId": 31337,
+    "dojangMock": true,
+    "dojangVerifier": "0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496",
+    "employerRegistry": "0x34A1D3fff3958843C43aD80F30b94c510645C316",
+    "upIdResolver": "0x62c20Aa1e0272312BC100b4e23B4DC1Ed96dD7D1",
+    "wageVault": "0x90193C961A926261B756D1E5bb255e67ff9498A1"
+  }
+}
