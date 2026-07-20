@@ -5,3 +5,4 @@ broadcast/
 .env
 deployments/*.json
 !deployments/.gitkeep
+lib
