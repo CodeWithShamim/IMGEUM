@@ -1,0 +1,49 @@
+{
+  "docTitle": "임금체불 증빙 기록",
+  "docSubtitle": "IMGEUM 프로토콜이 발행한 온체인 증빙",
+  "recordNo": "증빙 제 {{id}} 호",
+  "issuedBy": "GIWA 블록체인에서 발행됨",
+  "notFound": "해당 ID의 증빙 기록을 찾을 수 없습니다.",
+  "sections": {
+    "summary": "요약",
+    "parties": "당사자",
+    "amounts": "금액",
+    "timeline": "경과",
+    "verification": "독립 검증"
+  },
+  "fields": {
+    "employer": "사업주",
+    "employerAddress": "사업주 주소",
+    "employerUpId": "사업주 up.id",
+    "worker": "노동자 (청구인)",
+    "workerAddress": "노동자 주소",
+    "wageAmount": "약정 임금",
+    "funded": "예치된 금액",
+    "shortfall": "미지급액",
+    "periodStart": "주기 시작일",
+    "periodEnd": "주기 종료일",
+    "deadline": "도과한 지급 기한",
+    "attestedAt": "기록 일시",
+    "attestedBlock": "기록 블록",
+    "vault": "원천 볼트",
+    "dojangUid": "Dojang 증명 UID"
+  },
+  "verification": {
+    "atRecord": "볼트 개설 시점 Dojang 검증",
+    "now": "현재 Dojang 검증 상태",
+    "yes": "예",
+    "no": "아니오 / 취소됨",
+    "outstanding": "현재 미지급 잔액",
+    "explainer": "이 기록은 신뢰가 필요 없습니다. 사업주 신원을 직접 재확인하세요: Dojang 증명 UID를 GIWA의 EAS 컨트랙트에 입력하거나, 익스플로러에서 원천 볼트를 여세요. IMGEUM이나 노동자를 신뢰할 필요가 없습니다.",
+    "easLink": "EAS에서 증명 검증",
+    "vaultLink": "원천 볼트 열기",
+    "recordLink": "증빙 컨트랙트 열기"
+  },
+  "legal": {
+    "statement": "본 문서는 기록된 시점을 기준으로, 참조된 온체인 볼트를 통해 약정된 임금이 지급 기한까지 전액 예치되지 않았음을 증명합니다. 이 기록은 변경이 불가능하며, 위 노동자에게 양도 불가능한 토큰으로 발행되었습니다.",
+    "forOfficial": "고용노동부 또는 법원 제출용.",
+    "printHint": "인쇄 기능으로 두 언어가 포함된 깔끔한 종이 사본을 만드세요."
+  },
+  "shareCta": "증빙 링크 공유",
+  "printCta": "증빙 인쇄"
+}

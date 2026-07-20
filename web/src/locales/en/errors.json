@@ -1,0 +1,21 @@
+{
+  "generic": "Something went wrong. Please try again.",
+  "rejected": "You rejected the transaction.",
+  "notConnected": "Wallet not connected.",
+  "wrongNetwork": "Wrong network — switch to GIWA Sepolia.",
+  "notDeployed": "IMGEUM isn't deployed on this network.",
+  "insufficientFunds": "Not enough ETH for gas.",
+  "notVerified": "This address is not Dojang-verified.",
+  "alreadyRegistered": "This address is already registered.",
+  "notRegistered": "Register your company first.",
+  "invalidWorker": "Enter a valid worker address or up.id.",
+  "invalidAmount": "Enter a valid amount.",
+  "invalidPeriod": "Period end must be in the future and after the start.",
+  "invalidDeadline": "Deadline must be on or after the period end, within 30 days.",
+  "notBreached": "This vault isn't in arrears yet.",
+  "alreadyAttested": "Arrears already recorded for this vault.",
+  "nothingToWithdraw": "Nothing available to withdraw.",
+  "resolveFailed": "Couldn't resolve that up.id name.",
+  "txFailed": "Transaction failed on-chain.",
+  "loadFailed": "Couldn't load on-chain data."
+}

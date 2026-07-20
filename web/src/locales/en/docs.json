@@ -1,0 +1,83 @@
+{
+  "title": "Documentation",
+  "subtitle": "How IMGEUM works, end to end",
+  "toc": "On this page",
+  "nav": {
+    "overview": "Overview & problem",
+    "streaming": "How streaming vaults work",
+    "employer": "Employer guide",
+    "worker": "Worker guide",
+    "evidence": "Evidence & arrears attestation",
+    "contracts": "Contracts & ABIs",
+    "giwa": "GIWA integration notes",
+    "faq": "FAQ",
+    "security": "Security & limitations"
+  },
+  "overview": {
+    "heading": "Overview & the problem",
+    "p1": "Korea has one of the highest wage-arrears (임금체불) rates in the OECD. In 2023 unpaid wages exceeded ₩1.78 trillion, affecting over 275,000 workers. The people hit hardest — factory staff, delivery riders, part-timers, foreign laborers — are the least equipped to spend months assembling evidence for the labor office.",
+    "p2": "IMGEUM makes employer solvency visible before payday, and makes non-payment provable in a single transaction. It has two layers: a streaming wage escrow that shows funding in real time, and an evidence layer that mints permanent on-chain proof of arrears. The evidence layer has standalone value — it works even when employers refuse to cooperate."
+  },
+  "streaming": {
+    "heading": "How streaming vaults work",
+    "p1": "An employer opens a vault for one worker and one pay period, then funds it continuously. The worker's earned balance accrues linearly with time: earned = wage × elapsed / periodLength, capped at the wage. On GIWA's 1-second blocks the number visibly moves.",
+    "p2": "Withdrawable is min(earned, funded) − withdrawn. The worker can only pull wages that are both accrued and actually escrowed, and can do so at any time via a pull-payment. If the vault is short at the payout deadline, it is in arrears.",
+    "diagramCaption": "Vault lifecycle: open → fund (repeatedly) → stream → withdraw → close, or → arrears."
+  },
+  "employer": {
+    "heading": "Employer guide",
+    "s1": "1. Register. Your address must hold a Dojang Verified Address attestation. Registration stores your company name and up.id, and snapshots the attestation UID.",
+    "s2": "2. Open a vault. Choose the worker, total wage, pay period, payout deadline, and token (ETH or a stablecoin).",
+    "s3": "3. Fund continuously. Deposit any amount, any time. Anyone can fund — a parent company or guarantor can top up.",
+    "s4": "4. Settle. After the period ends, close the vault. Paying in full by the deadline builds your pay-reliability score."
+  },
+  "worker": {
+    "heading": "Worker guide",
+    "s1": "1. Watch your stream. Open the worker view to see wages accrue every second and how far ahead or behind funding is.",
+    "s2": "2. Withdraw anytime. Pull vested-and-funded wages instantly. Settlement is near-instant on GIWA.",
+    "s3": "3. If payday fails. Once the deadline passes with wages unfunded, tap Record arrears. This mints a permanent evidence record and a non-transferable token to you.",
+    "s4": "4. Export the evidence. Open your evidence page, print it, or share the link with the labor office — no wallet needed to read it."
+  },
+  "evidence": {
+    "heading": "Evidence & the arrears attestation",
+    "p1": "attestArrears(vaultId) is permissionless: the worker, a union rep, or an automated watcher can call it once the deadline has passed and the vault is short. It snapshots the employer, worker, shortfall, period, timestamp and block number into an immutable record, and mints a soulbound evidence token to the worker.",
+    "p2": "The record is trustless. It follows GIWA's OnchainVerifiable pattern and stores the employer's Dojang attestation UID, so a labor office can re-verify the employer's identity directly against the EAS contract — without trusting IMGEUM or the worker. The evidence page shows the identity as it was when the vault opened AND a live re-check today.",
+    "sampleHeading": "Annotated sample record",
+    "sampleEmployer": "Employer: the verified company, frozen at attestation time",
+    "sampleShortfall": "Shortfall: accrued wages minus what was escrowed",
+    "sampleUid": "Dojang UID: re-checkable against EAS by anyone"
+  },
+  "contracts": {
+    "heading": "Contracts & ABIs",
+    "p1": "Addresses and ABIs below are imported directly from the deployment artifacts — never hand-copied. Every contract deep-links to the GIWA Sepolia explorer.",
+    "verifyPanel": "Verify it yourself",
+    "abiHint": "ABIs are bundled with this app under src/config/abis.",
+    "notDeployed": "No deployment found for the active network."
+  },
+  "giwa": {
+    "heading": "GIWA integration notes",
+    "dojang": "Dojang Verified Address gates employer registration via DojangScroll.isVerified(). Each claim links to the official GIWA doc.",
+    "upid": "up.id names are ENS subdomains; resolution is client-side. Money is always routed by address, never by name.",
+    "flashblocks": "Flashblocks give 200ms preconfirmations; the wage counter interpolates client-side between 1-second blocks.",
+    "fees": "GIWA fees are an L2 execution fee (EIP-1559) plus an L1 security fee for publishing data to Ethereum. The struct-based vault design minimizes both."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "q1": "Do I need a wallet to read an evidence page?",
+    "a1": "No. The evidence page and the verifier view are fully wallet-less and printable.",
+    "q2": "What if the employer never opts in?",
+    "a2": "The streaming layer needs the employer, but the evidence layer's value is standalone: any vault that goes unfunded produces provable arrears.",
+    "q3": "Can an employer delete the evidence?",
+    "a3": "No. The record is immutable and the token is soulbound — it cannot be transferred or burned.",
+    "q4": "Is this real KYC on testnet?",
+    "a4": "On GIWA Sepolia the demo uses a mock verifier, clearly labeled MOCK VERIFICATION. The production build wires the real DojangScroll."
+  },
+  "security": {
+    "heading": "Security model & known limitations",
+    "l1": "Time source: streaming uses block.timestamp, which a sequencer can nudge by seconds. At GIWA wage rates this is economically irrelevant; deadlines have a settlement window to absorb it.",
+    "l2": "Fee-on-transfer tokens are handled by crediting the measured balance delta, so a vault never reports more funding than it holds.",
+    "l3": "Pull-payments + reentrancy guards + checks-effects-interactions throughout; withdrawals are never pausable.",
+    "l4": "up.id resolution is advisory only. A wrong name can never misroute funds — the worst case is a cosmetic label shown in an unverified state.",
+    "l5": "Audit note: the stream math invariants (withdrawn ≤ earned ≤ wage, funded ≥ withdrawn) and the single-contract solvency invariant are the first things to review."
+  }
+}

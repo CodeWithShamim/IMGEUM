@@ -1,0 +1,21 @@
+{
+  "generic": "문제가 발생했습니다. 다시 시도해 주세요.",
+  "rejected": "트랜잭션을 거부했습니다.",
+  "notConnected": "지갑이 연결되지 않았습니다.",
+  "wrongNetwork": "잘못된 네트워크 — GIWA 세폴리아로 전환하세요.",
+  "notDeployed": "이 네트워크에는 IMGEUM이 배포되지 않았습니다.",
+  "insufficientFunds": "가스비로 쓸 ETH가 부족합니다.",
+  "notVerified": "이 주소는 Dojang 검증을 받지 않았습니다.",
+  "alreadyRegistered": "이미 등록된 주소입니다.",
+  "notRegistered": "먼저 기업을 등록하세요.",
+  "invalidWorker": "유효한 노동자 주소 또는 up.id를 입력하세요.",
+  "invalidAmount": "유효한 금액을 입력하세요.",
+  "invalidPeriod": "주기 종료는 미래이며 시작 이후여야 합니다.",
+  "invalidDeadline": "지급 기한은 주기 종료 이후, 30일 이내여야 합니다.",
+  "notBreached": "이 볼트는 아직 체불 상태가 아닙니다.",
+  "alreadyAttested": "이 볼트의 체불은 이미 기록되었습니다.",
+  "nothingToWithdraw": "출금 가능한 금액이 없습니다.",
+  "resolveFailed": "해당 up.id 이름을 해석할 수 없습니다.",
+  "txFailed": "온체인에서 트랜잭션이 실패했습니다.",
+  "loadFailed": "온체인 데이터를 불러오지 못했습니다."
+}

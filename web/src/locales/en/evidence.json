@@ -1,0 +1,49 @@
+{
+  "docTitle": "Wage Arrears Evidence Record",
+  "docSubtitle": "On-chain proof issued by the IMGEUM Protocol",
+  "recordNo": "Record No. {{id}}",
+  "issuedBy": "Issued on the GIWA blockchain",
+  "notFound": "No evidence record found for this ID.",
+  "sections": {
+    "summary": "Summary",
+    "parties": "Parties",
+    "amounts": "Amounts",
+    "timeline": "Timeline",
+    "verification": "Independent verification"
+  },
+  "fields": {
+    "employer": "Employer",
+    "employerAddress": "Employer address",
+    "employerUpId": "Employer up.id",
+    "worker": "Worker (claimant)",
+    "workerAddress": "Worker address",
+    "wageAmount": "Contracted wage",
+    "funded": "Amount escrowed",
+    "shortfall": "Unpaid shortfall",
+    "periodStart": "Period start",
+    "periodEnd": "Period end",
+    "deadline": "Missed payout deadline",
+    "attestedAt": "Recorded at",
+    "attestedBlock": "Recorded in block",
+    "vault": "Source vault",
+    "dojangUid": "Dojang attestation UID"
+  },
+  "verification": {
+    "atRecord": "Dojang-verified when the vault opened",
+    "now": "Dojang-verified right now",
+    "yes": "Yes",
+    "no": "No / revoked",
+    "outstanding": "Still outstanding",
+    "explainer": "This record is trustless. Re-check the employer's identity yourself: feed the Dojang attestation UID into the EAS contract on GIWA, or open the source vault on the explorer. You do not need to trust IMGEUM or the worker.",
+    "easLink": "Verify attestation on EAS",
+    "vaultLink": "Open source vault",
+    "recordLink": "Open evidence contract"
+  },
+  "legal": {
+    "statement": "This document certifies that as of the recorded timestamp, the wages contracted through the referenced on-chain vault were not fully escrowed by the payout deadline. The record is immutable and was minted as a non-transferable token to the worker named above.",
+    "forOfficial": "For submission to the Ministry of Employment and Labor (고용노동부) or a court.",
+    "printHint": "Use Print to produce a clean paper copy (both languages)."
+  },
+  "shareCta": "Share this evidence link",
+  "printCta": "Print evidence"
+}

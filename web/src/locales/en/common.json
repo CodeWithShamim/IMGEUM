@@ -1,0 +1,92 @@
+{
+  "brand": "IMGEUM",
+  "brandSub": "Wage Protocol",
+  "tagline": "Proof of solvency for payroll. Proof of arrears in seconds.",
+  "nav": {
+    "home": "Home",
+    "worker": "Worker",
+    "employer": "Employer",
+    "docs": "Docs",
+    "connect": "Connect wallet",
+    "connecting": "Connecting…",
+    "disconnect": "Disconnect",
+    "wrongNetwork": "Switch to GIWA",
+    "menu": "Menu"
+  },
+  "lang": { "ko": "KO", "en": "EN", "switchTo": "Switch language" },
+  "roles": {
+    "worker": "Worker",
+    "employer": "Employer",
+    "verifier": "Verifier"
+  },
+  "status": {
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "mock": "MOCK VERIFICATION",
+    "mockNote": "Demo deployment — Dojang identity is simulated, not real KYC.",
+    "onTime": "Paid on time",
+    "streaming": "Streaming",
+    "breached": "In arrears",
+    "closed": "Settled",
+    "pending": "Pending",
+    "loading": "Loading…"
+  },
+  "actions": {
+    "fund": "Fund",
+    "withdraw": "Withdraw",
+    "openVault": "Open vault",
+    "close": "Close vault",
+    "register": "Register",
+    "attest": "Record arrears",
+    "copy": "Copy",
+    "copied": "Copied",
+    "viewOnExplorer": "View on explorer",
+    "print": "Print",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "getTestEth": "Get test ETH"
+  },
+  "units": {
+    "eth": "ETH",
+    "krw": "KRW",
+    "perSecond": "/sec",
+    "perMonth": "/mo"
+  },
+  "labels": {
+    "employer": "Employer",
+    "worker": "Worker",
+    "wage": "Wage",
+    "earned": "Earned",
+    "funded": "Funded",
+    "withdrawn": "Withdrawn",
+    "withdrawable": "Withdrawable",
+    "shortfall": "Shortfall",
+    "period": "Pay period",
+    "deadline": "Payout deadline",
+    "solvencyScore": "Pay-reliability score",
+    "vault": "Vault",
+    "vaultId": "Vault #{{id}}",
+    "address": "Address",
+    "upId": "up.id name",
+    "attestation": "Dojang attestation",
+    "block": "Block"
+  },
+  "empty": {
+    "noVaults": "No vaults yet.",
+    "noHistory": "No payment history yet.",
+    "notConnected": "Connect your wallet to continue.",
+    "notDeployed": "IMGEUM is not deployed on this network yet."
+  },
+  "footer": {
+    "builtFor": "Built on GIWA.",
+    "docsLink": "GIWA Docs",
+    "faucet": "Faucet",
+    "explorer": "Explorer",
+    "rights": "An open wage-arrears evidence protocol."
+  },
+  "network": {
+    "banner": "You're viewing GIWA Sepolia testnet data.",
+    "wrongNetworkBody": "This app runs on GIWA Sepolia. Switch networks to continue."
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "brand": "임금",
+  "brandSub": "임금 프로토콜",
+  "tagline": "급여 지급 능력을 미리 증명하고, 체불은 몇 초 만에 증빙합니다.",
+  "nav": {
+    "home": "홈",
+    "worker": "노동자",
+    "employer": "사업주",
+    "docs": "문서",
+    "connect": "지갑 연결",
+    "connecting": "연결 중…",
+    "disconnect": "연결 해제",
+    "wrongNetwork": "GIWA로 전환",
+    "menu": "메뉴"
+  },
+  "lang": { "ko": "KO", "en": "EN", "switchTo": "언어 변경" },
+  "roles": {
+    "worker": "노동자",
+    "employer": "사업주",
+    "verifier": "확인자"
+  },
+  "status": {
+    "verified": "검증됨",
+    "unverified": "미검증",
+    "mock": "모의 검증",
+    "mockNote": "데모 배포 — Dojang 신원은 실제 KYC가 아닌 시뮬레이션입니다.",
+    "onTime": "정시 지급",
+    "streaming": "스트리밍 중",
+    "breached": "임금체불",
+    "closed": "정산 완료",
+    "pending": "대기 중",
+    "loading": "불러오는 중…"
+  },
+  "actions": {
+    "fund": "예치",
+    "withdraw": "출금",
+    "openVault": "볼트 개설",
+    "close": "볼트 정산",
+    "register": "등록",
+    "attest": "체불 증빙 발행",
+    "copy": "복사",
+    "copied": "복사됨",
+    "viewOnExplorer": "익스플로러에서 보기",
+    "print": "인쇄",
+    "retry": "다시 시도",
+    "cancel": "취소",
+    "confirm": "확인",
+    "getTestEth": "테스트 ETH 받기"
+  },
+  "units": {
+    "eth": "ETH",
+    "krw": "원",
+    "perSecond": "/초",
+    "perMonth": "/월"
+  },
+  "labels": {
+    "employer": "사업주",
+    "worker": "노동자",
+    "wage": "임금",
+    "earned": "적립 임금",
+    "funded": "예치액",
+    "withdrawn": "출금액",
+    "withdrawable": "출금 가능액",
+    "shortfall": "미지급액",
+    "period": "지급 주기",
+    "deadline": "지급 기한",
+    "solvencyScore": "임금 신뢰도 점수",
+    "vault": "볼트",
+    "vaultId": "볼트 #{{id}}",
+    "address": "주소",
+    "upId": "up.id 이름",
+    "attestation": "Dojang 증명",
+    "block": "블록"
+  },
+  "empty": {
+    "noVaults": "아직 볼트가 없습니다.",
+    "noHistory": "아직 지급 이력이 없습니다.",
+    "notConnected": "계속하려면 지갑을 연결하세요.",
+    "notDeployed": "이 네트워크에는 아직 IMGEUM이 배포되지 않았습니다."
+  },
+  "footer": {
+    "builtFor": "GIWA 기반.",
+    "docsLink": "GIWA 문서",
+    "faucet": "포셋",
+    "explorer": "익스플로러",
+    "rights": "누구나 열람 가능한 임금체불 증빙 프로토콜."
+  },
+  "network": {
+    "banner": "GIWA 세폴리아 테스트넷 데이터를 보고 있습니다.",
+    "wrongNetworkBody": "이 앱은 GIWA 세폴리아에서 동작합니다. 계속하려면 네트워크를 전환하세요."
+  }
+}

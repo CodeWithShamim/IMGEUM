@@ -1,0 +1,62 @@
+{
+  "hero": {
+    "watermark": "WAGE",
+    "line1": "YOUR WAGE",
+    "line2": "IS KING",
+    "kicker": "PROOF-OF-SOLVENCY PAYROLL · GIWA L2",
+    "sub": "Employers stream your wages into a time-locked vault. You watch every won accrue in real time. If payday fails, the evidence is already on-chain.",
+    "ctaWorker": "I'm a worker",
+    "ctaEmployer": "I'm an employer",
+    "liveCounter": "Live accrual"
+  },
+  "stats": {
+    "arrearsLabel": "Korean wage arrears in 2023",
+    "arrearsValue": "₩1.78 trillion",
+    "workersLabel": "Workers affected annually",
+    "workersValue": "over 275,000",
+    "blockLabel": "GIWA block time",
+    "blockValue": "1 second",
+    "attestLabel": "Time to prove non-payment",
+    "attestValue": "one transaction"
+  },
+  "problem": {
+    "watermark": "체불",
+    "title": "Workers find out too late",
+    "body": "Korea has one of the highest wage-arrears rates in the OECD. Factory staff, delivery riders, part-timers and foreign laborers discover their employer can't pay only when payday fails — then spend months assembling evidence for the labor office.",
+    "point1Title": "No early warning",
+    "point1Body": "Solvency is invisible until the money doesn't arrive.",
+    "point2Title": "Proof is manual",
+    "point2Body": "Pay stubs, messages, bank records — assembled by hand, contested for months.",
+    "point3Title": "Power is asymmetric",
+    "point3Body": "The worker carries the entire burden of proof against the employer."
+  },
+  "how": {
+    "watermark": "신뢰",
+    "title": "How IMGEUM works",
+    "step1Title": "Employer opens a vault",
+    "step1Body": "A verified employer opens a time-locked vault per worker, per pay period, and funds it continuously.",
+    "step2Title": "Wages stream in real time",
+    "step2Body": "Your earned balance accrues every second. On GIWA's 1-second blocks, the counter is alive — not a monthly surprise.",
+    "step3Title": "Withdraw anytime",
+    "step3Body": "Pull vested-and-funded wages the instant you want them. Settlement is near-instant on GIWA.",
+    "step4Title": "Arrears prove themselves",
+    "step4Body": "If the vault is short at the deadline, anyone can mint a permanent, timestamped evidence record — court and labor-office ready."
+  },
+  "why": {
+    "watermark": "GIWA",
+    "title": "Why GIWA",
+    "flashTitle": "1-second blocks + Flashblocks",
+    "flashBody": "A wage stream is only convincing if it visibly moves. GIWA's 1s blocks and 200ms preconfirmations make the counter tick in real time.",
+    "dojangTitle": "Dojang Verified Address",
+    "dojangBody": "Employers register through Dojang, so a worker knows the vault belongs to the real registered company — not an impostor.",
+    "upidTitle": "Upbit Web3 Names",
+    "upidBody": "Workers and employers are addressed by name.up.id — never a raw hex address."
+  },
+  "cta": {
+    "title": "Make your wages provable",
+    "body": "Open the worker view, or register your company and show workers you pay on time.",
+    "worker": "Open worker view",
+    "employer": "Register as employer",
+    "docs": "Read the docs"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "title": "내 임금",
+  "subtitle": "GIWA 실시간",
+  "connectPrompt": "임금 스트림을 보려면 지갑을 연결하세요.",
+  "streamLabel": "지금 적립 중",
+  "accruedThisPeriod": "이번 주기 적립액",
+  "ofWage": "총 {{total}} 중",
+  "fundedSoFar": "현재 예치액",
+  "withdrawableNow": "출금 가능액",
+  "withdrawCta": "{{amount}} 출금",
+  "nothingToWithdraw": "아직 출금할 금액이 없습니다",
+  "withdrawing": "출금 중…",
+  "withdrawSuccess": "{{amount}} 출금 완료",
+  "vaultsHeading": "내 볼트",
+  "activeVaults": "진행 중",
+  "settledVaults": "정산 완료",
+  "arrearsVaults": "체불",
+  "vaultFrom": "{{employer}} 지급",
+  "ratePerSec": "초당 {{amount}}",
+  "fundedPace": {
+    "ahead": "예치가 적립보다 앞서 있습니다",
+    "onpace": "예치가 적립 속도를 따라가고 있습니다",
+    "behind": "예치가 뒤처졌습니다 — {{amount}} 부족",
+    "breached": "미지급 상태로 지급 기한이 지났습니다"
+  },
+  "arrears": {
+    "banner": "이 볼트는 임금체불 상태입니다",
+    "body": "{{amount}}가 예치되지 않은 채 지급 기한이 지났습니다. 지금 영구 증빙 기록을 만들 수 있습니다.",
+    "cta": "체불 증빙 발행",
+    "recording": "발행 중…",
+    "recorded": "증빙이 발행되었습니다",
+    "viewEvidence": "증빙 페이지 열기",
+    "alreadyRecorded": "이미 증빙이 존재합니다"
+  },
+  "history": {
+    "heading": "출금 이력",
+    "empty": "아직 출금 내역이 없습니다.",
+    "withdrew": "{{amount}} 출금",
+    "funded": "사업주가 {{amount}} 예치"
+  },
+  "reducedMotion": "시스템 설정에 따라 애니메이션이 줄었습니다."
+}

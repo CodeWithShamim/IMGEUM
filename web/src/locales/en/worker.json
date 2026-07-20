@@ -1,0 +1,42 @@
+{
+  "title": "Your wages",
+  "subtitle": "Live from GIWA",
+  "connectPrompt": "Connect your wallet to see your wage stream.",
+  "streamLabel": "Earning right now",
+  "accruedThisPeriod": "Accrued this period",
+  "ofWage": "of {{total}}",
+  "fundedSoFar": "Funded so far",
+  "withdrawableNow": "Available to withdraw",
+  "withdrawCta": "Withdraw {{amount}}",
+  "nothingToWithdraw": "Nothing to withdraw yet",
+  "withdrawing": "Withdrawing…",
+  "withdrawSuccess": "Withdrew {{amount}}",
+  "vaultsHeading": "Your vaults",
+  "activeVaults": "Active",
+  "settledVaults": "Settled",
+  "arrearsVaults": "In arrears",
+  "vaultFrom": "From {{employer}}",
+  "ratePerSec": "{{amount}} / sec",
+  "fundedPace": {
+    "ahead": "Funding is ahead of your earnings",
+    "onpace": "Funding is keeping pace",
+    "behind": "Funding is behind — {{amount}} short",
+    "breached": "Payout deadline passed while underfunded"
+  },
+  "arrears": {
+    "banner": "This vault is in arrears",
+    "body": "The payout deadline passed with {{amount}} unfunded. You can create a permanent evidence record now.",
+    "cta": "Record the arrears",
+    "recording": "Recording…",
+    "recorded": "Evidence recorded",
+    "viewEvidence": "Open evidence page",
+    "alreadyRecorded": "Evidence already exists"
+  },
+  "history": {
+    "heading": "Withdrawal history",
+    "empty": "No withdrawals yet.",
+    "withdrew": "Withdrew {{amount}}",
+    "funded": "Employer funded {{amount}}"
+  },
+  "reducedMotion": "Animations reduced per your system setting."
+}

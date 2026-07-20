@@ -1,0 +1,62 @@
+{
+  "title": "사업주 콘솔",
+  "subtitle": "급여를 예치하고 신뢰를 쌓으세요",
+  "connectPrompt": "급여를 관리하려면 지갑을 연결하세요.",
+  "register": {
+    "heading": "기업 등록",
+    "body": "등록은 Dojang 검증 주소로 제한되므로, 노동자는 볼트가 실제임을 알 수 있습니다.",
+    "gateVerified": "귀하의 주소는 Dojang 검증을 받았습니다.",
+    "gateUnverified": "귀하의 주소는 아직 Dojang 검증을 받지 않았습니다.",
+    "gateMock": "데모 모드: 아래를 눌러 Dojang 검증을 시뮬레이션하세요.",
+    "mockVerifyCta": "Dojang 검증 시뮬레이션",
+    "upIdLabel": "up.id 이름",
+    "upIdPlaceholder": "yourcompany.up.id",
+    "displayNameLabel": "기업명",
+    "displayNamePlaceholder": "주식회사 아크메",
+    "submit": "기업 등록",
+    "registering": "등록 중…",
+    "success": "등록 완료",
+    "already": "기업이 등록되어 있습니다."
+  },
+  "score": {
+    "heading": "임금 신뢰도",
+    "unrated": "아직 이력이 부족합니다",
+    "unratedBody": "{{n}}개 주기를 정산하면 등급이 부여됩니다.",
+    "outOf": "1000점 만점",
+    "onTime": "정시 지급 {{count}}회",
+    "arrears": "체불 {{count}}회",
+    "vaultsOpened": "볼트 {{count}}개 개설",
+    "badge": "신뢰도 배지",
+    "badgeBody": "채용 공고에 표시하세요."
+  },
+  "open": {
+    "heading": "임금 볼트 개설",
+    "workerLabel": "노동자 (주소 또는 up.id)",
+    "workerPlaceholder": "worker.up.id 또는 0x…",
+    "wageLabel": "해당 주기 총 임금",
+    "tokenLabel": "임금 토큰",
+    "tokenNative": "네이티브 ETH",
+    "tokenErc20": "원화 스테이블코인",
+    "startLabel": "주기 시작",
+    "endLabel": "주기 종료",
+    "deadlineLabel": "지급 기한",
+    "submit": "볼트 개설",
+    "opening": "개설 중…",
+    "success": "볼트가 개설되었습니다"
+  },
+  "vaults": {
+    "heading": "내 볼트",
+    "fundCta": "예치",
+    "fundAmount": "예치 금액",
+    "fundSubmit": "볼트에 예치",
+    "funding": "예치 중…",
+    "funded": "{{amount}} 예치 완료",
+    "fullyFunded": "전액 예치됨",
+    "closeCta": "정산 및 종료",
+    "closing": "종료 중…",
+    "closed": "정산 완료",
+    "workerEarning": "노동자가 임금을 적립 중",
+    "needsFunding": "{{amount}} 추가 필요",
+    "breached": "체불 — {{amount}} 미지급"
+  }
+}

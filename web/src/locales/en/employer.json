@@ -1,0 +1,62 @@
+{
+  "title": "Employer console",
+  "subtitle": "Fund payroll, build reliability",
+  "connectPrompt": "Connect your wallet to manage payroll.",
+  "register": {
+    "heading": "Register your company",
+    "body": "Registration is gated by a Dojang Verified Address, so workers know your vaults are real.",
+    "gateVerified": "Your address is Dojang-verified.",
+    "gateUnverified": "Your address is not Dojang-verified yet.",
+    "gateMock": "Demo mode: click below to simulate Dojang verification.",
+    "mockVerifyCta": "Simulate Dojang verification",
+    "upIdLabel": "up.id name",
+    "upIdPlaceholder": "yourcompany.up.id",
+    "displayNameLabel": "Company name",
+    "displayNamePlaceholder": "Acme Co., Ltd.",
+    "submit": "Register company",
+    "registering": "Registering…",
+    "success": "Registered",
+    "already": "Your company is registered."
+  },
+  "score": {
+    "heading": "Pay-reliability",
+    "unrated": "Not enough history yet",
+    "unratedBody": "Settle {{n}} pay periods to earn a rating.",
+    "outOf": "out of 1000",
+    "onTime": "{{count}} on-time",
+    "arrears": "{{count}} in arrears",
+    "vaultsOpened": "{{count}} vaults opened",
+    "badge": "Reliability badge",
+    "badgeBody": "Show this on job postings."
+  },
+  "open": {
+    "heading": "Open a wage vault",
+    "workerLabel": "Worker (address or up.id)",
+    "workerPlaceholder": "worker.up.id or 0x…",
+    "wageLabel": "Total wage for the period",
+    "tokenLabel": "Wage token",
+    "tokenNative": "Native ETH",
+    "tokenErc20": "KRW stablecoin",
+    "startLabel": "Period start",
+    "endLabel": "Period end",
+    "deadlineLabel": "Payout deadline",
+    "submit": "Open vault",
+    "opening": "Opening…",
+    "success": "Vault opened"
+  },
+  "vaults": {
+    "heading": "Your vaults",
+    "fundCta": "Fund",
+    "fundAmount": "Amount to fund",
+    "fundSubmit": "Fund vault",
+    "funding": "Funding…",
+    "funded": "Funded {{amount}}",
+    "fullyFunded": "Fully funded",
+    "closeCta": "Close & settle",
+    "closing": "Closing…",
+    "closed": "Settled",
+    "workerEarning": "Worker is earning",
+    "needsFunding": "Needs {{amount}} more",
+    "breached": "In arrears — {{amount}} unpaid"
+  }
+}
