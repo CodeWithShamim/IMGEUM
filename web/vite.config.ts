@@ -9,6 +9,17 @@ export default defineConfig({
     // Keep the wage-stream canvas and framer-motion out of the initial route bundle so the
     // landing page (the Lighthouse target) stays lean.
     rollupOptions: {
+      // The `ox` dep (a viem/wagmi transitive) ships misplaced /*#__PURE__*/
+      // annotations that Rollup can't interpret. They're harmless — suppress the noise.
+      onwarn(warning, warn) {
+        if (
+          warning.code === 'INVALID_ANNOTATION' &&
+          warning.message.indexOf('/*#__PURE__*/') !== -1
+        ) {
+          return;
+        }
+        warn(warning);
+      },
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
