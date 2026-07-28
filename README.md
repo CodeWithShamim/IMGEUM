@@ -201,11 +201,78 @@ Query · Zustand · react-router · react-i18next.
 
 ## Roadmap (mapped to GASOK phases)
 
-- **Phase 1 — MVP (Jun–Jul):** ✅ contracts + tests + bilingual app; testnet deploy; full demo path.
-- **Phase 2 — Productize (Aug–Sep):** ✅ live DojangScroll + live UPNameRegistry wired (no mock
-  mode remains); Upbit Oracle for live KRW display; contract audit (Giwa builder package);
-  GIWA Wallet tab integration.
-- **KPI targets:** monthly funded vaults · active workers · attestations minted · transaction volume.
+Status marks are literal. **✅** is in `main` and exercised by a test or a running screen.
+**🚧** means the contract or component exists but the user-facing path does not.
+**⬜** is not started.
+
+### Phase 1 — MVP (Jun–Jul) ✅
+
+- ✅ Four contracts deployed and source-verified on GIWA Sepolia against the **live**
+  DojangScroll and UPNameRegistry — no mock mode remains in the tree.
+- ✅ Unit + fuzz + invariant + live-chain fork suites green; >95% line coverage on the three
+  core contracts; four exploits found and frozen as regression tests
+  ([`contracts/test/Exploits.t.sol`](./contracts/test/Exploits.t.sol)).
+- ✅ Full demo path: register → open vault → fund → stream → withdraw → arrears → evidence.
+- ✅ Bilingual KO/EN across every page, with `pnpm check:i18n` as a CI gate.
+- ✅ Wrong-network detection and one-prompt chain switching
+  ([`web/src/hooks/useNetwork.ts`](./web/src/hooks/useNetwork.ts)) — `useChainId()` reports the
+  *configured* chain, never the wallet's, so this needed its own module.
+
+### Phase 2 — Productize (Aug–Sep) 🚧
+
+**Identity — make `name.up.id` the way people are addressed, not a footnote**
+
+- ✅ Forward resolution: an employer types `worker.up.id` into the open-vault form and it
+  resolves through `UpIdResolver.resolve` before the transaction is built.
+- 🚧 Reverse resolution. [`AddressChip`](./web/src/components/ui/AddressChip.tsx) already accepts
+  a `upId` prop and nothing in the app passes it, so every address — including the employer a
+  worker most needs to recognise — renders as hex. Needs a `useUpId(address)` hook over
+  `UpIdResolver.reverse`, wired into `VaultCard` and the evidence page.
+
+**Reputation as a public good**
+
+- 🚧 Public employer directory (`/employers`). `employersPaged` and `solvencyScore` are both in
+  the ABI, but [`useEmployer.ts`](./web/src/hooks/useEmployer.ts) only ever reads the *connected*
+  employer's score. A worker cannot look an employer up before taking the job — which is the
+  half of the pay-reliability pitch that does not exist yet.
+- ⬜ Per-employer public profile: score, funded-vault history, and arrears records via
+  `ArrearsAttestor.recordsOfEmployer` (currently unused by the app).
+
+**Money**
+
+- 🚧 ERC-20 wage vaults. `WageVault.openVault` already takes a token address and the contract is
+  SafeERC20- and fee-on-transfer-safe; the form hardcodes the native token and `parseEther`.
+  Needs a token selector, decimals-aware parsing, and an allowance step ahead of `fund`.
+- ⬜ Upbit Oracle for KRW. Every won figure in the app — including on the labour-office evidence
+  page — currently derives from `ETH_KRW_PLACEHOLDER` in
+  [`web/src/lib/format.ts`](./web/src/lib/format.ts). It is isolated to one constant on purpose.
+  Highest correctness stakes on this list: an evidence page is meant to be handed to a labour
+  office, so a placeholder rate does not belong on it.
+
+**Chain-speed claims, actually exercised**
+
+- ⬜ Flashblocks preconfirmations. The endpoint is configured today only as a *fallback*
+  transport ([`web/src/config/wagmi.ts`](./web/src/config/wagmi.ts)). Reading pending-block state
+  after `fund`/`withdraw` would make the 200 ms claim in `/docs` something the app demonstrates
+  rather than describes.
+
+**Hardening**
+
+- ⬜ Contract audit (GIWA builder package).
+- ⬜ Extend `pnpm check:i18n` to fail on keys referenced by `t()` but missing from a locale file.
+  It checks EN/KO parity and hardcoded JSX strings today, which means a key absent from *both*
+  files passes CI and renders as its own raw identifier in the UI.
+
+### Phase 3 — Distribution (Oct–Dec) ⬜
+
+- GIWA Wallet in-app tab. `/worker` is already built mobile-first, injected-connector-first,
+  one-primary-action for exactly this; the remaining work is their embedding contract.
+- Mainnet deploy with `PROTOCOL_OWNER` set to a multisig.
+- Labour-office and union pilot: evidence-page layout reviewed by a practising 노무사 (certified
+  labour attorney), plus a PDF export alongside the existing print path.
+- Batch vault opening for employers running payroll across many workers.
+
+**KPI targets:** monthly funded vaults · active workers · attestations minted · transaction volume.
 
 ---
 

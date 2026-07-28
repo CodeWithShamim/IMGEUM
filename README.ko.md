@@ -128,10 +128,75 @@ framer-motion · wagmi + viem · TanStack Query · Zustand · react-router · re
 
 ## 로드맵 (GASOK 단계별)
 
-- **1단계 — MVP(6–7월):** ✅ 컨트랙트 + 테스트 + 이중 언어 앱; 테스트넷 배포; 전체 데모 경로.
-- **2단계 — 상용화(8–9월):** 모의 Dojang → 실제 DojangScroll 교체; up.id 클라이언트 ENS 해석;
-  Upbit 오라클로 실시간 원화 표시; 컨트랙트 감사; GIWA 지갑 탭 연동.
-- **KPI 목표:** 월간 예치 볼트 · 활성 노동자 · 발행된 증빙 · 트랜잭션 규모.
+상태 표기는 문자 그대로입니다. **✅** 는 `main`에 반영되어 테스트 또는 실제 화면에서 동작하는
+항목, **🚧** 는 컨트랙트나 컴포넌트는 있으나 사용자가 닿는 경로가 아직 없는 항목,
+**⬜** 는 미착수 항목입니다.
+
+### 1단계 — MVP(6–7월) ✅
+
+- ✅ 네 개 컨트랙트를 GIWA Sepolia에 배포·소스 검증 완료. **실제** DojangScroll 및
+  UPNameRegistry에 연결되어 있으며, 저장소에 모의(mock) 모드는 남아 있지 않습니다.
+- ✅ 유닛 · 퍼즈 · 인베리언트 · 라이브 체인 포크 테스트 전부 통과, 핵심 컨트랙트 3종 라인
+  커버리지 95% 이상. 발견된 취약점 4건은 익스플로잇 그대로 회귀 테스트로 보존
+  ([`contracts/test/Exploits.t.sol`](./contracts/test/Exploits.t.sol)).
+- ✅ 전체 데모 경로: 등록 → 볼트 개설 → 예치 → 스트리밍 → 출금 → 체불 → 증빙.
+- ✅ 모든 페이지 한국어/영어 동시 지원, `pnpm check:i18n`을 CI 게이트로 운영.
+- ✅ 잘못된 네트워크 감지 및 1회 프롬프트 체인 전환
+  ([`web/src/hooks/useNetwork.ts`](./web/src/hooks/useNetwork.ts)). `useChainId()`는 지갑이 아니라
+  *설정된* 체인을 반환하기 때문에 별도 모듈이 필요했습니다.
+
+### 2단계 — 상용화(8–9월) 🚧
+
+**아이덴티티 — `name.up.id`를 부가 기능이 아니라 기본 주소 체계로**
+
+- ✅ 정방향 해석: 고용주가 볼트 개설 폼에 `worker.up.id`를 입력하면 트랜잭션 구성 전에
+  `UpIdResolver.resolve`로 주소를 확인합니다.
+- 🚧 역방향 해석. [`AddressChip`](./web/src/components/ui/AddressChip.tsx)은 이미 `upId` prop을
+  받지만 이를 넘겨주는 곳이 없어, 노동자가 가장 확인해야 할 고용주 주소를 포함해 모든 주소가
+  16진수로 표시됩니다. `UpIdResolver.reverse`를 감싸는 `useUpId(address)` 훅을 만들어
+  `VaultCard`와 증빙 페이지에 연결해야 합니다.
+
+**공공재로서의 평판**
+
+- 🚧 공개 고용주 디렉터리(`/employers`). `employersPaged`와 `solvencyScore` 모두 ABI에 있으나
+  [`useEmployer.ts`](./web/src/hooks/useEmployer.ts)는 *연결된* 고용주의 점수만 읽습니다. 노동자가
+  입사 전에 고용주를 조회할 수 없다는 뜻이며, 임금 신뢰도 점수 구상의 나머지 절반이 여기에
+  해당합니다.
+- ⬜ 고용주별 공개 프로필: 점수, 예치 이력, 그리고 `ArrearsAttestor.recordsOfEmployer`(현재 앱에서
+  미사용)를 통한 체불 기록.
+
+**자금**
+
+- 🚧 ERC-20 임금 볼트. `WageVault.openVault`는 이미 토큰 주소를 인자로 받고 컨트랙트는 SafeERC20 ·
+  전송수수료 토큰 안전성을 갖췄지만, 폼은 네이티브 토큰과 `parseEther`를 고정으로 사용합니다. 토큰
+  선택 UI, 소수점 자릿수를 고려한 파싱, `fund` 이전의 approve 단계가 필요합니다.
+- ⬜ 원화 표시용 Upbit 오라클. 노동청 제출용 증빙 페이지를 포함해 앱의 모든 원화 금액이 현재
+  [`web/src/lib/format.ts`](./web/src/lib/format.ts)의 `ETH_KRW_PLACEHOLDER` 상수에서 나옵니다.
+  교체가 쉽도록 상수 하나로 격리해 두었습니다. 이 목록에서 정확성 리스크가 가장 큰 항목입니다 —
+  증빙 페이지는 실제로 노동청에 제출되는 문서이므로 임시 환율이 실려서는 안 됩니다.
+
+**체인 속도 주장의 실증**
+
+- ⬜ Flashblocks 사전 확인. 현재 해당 엔드포인트는 *예비* 트랜스포트로만 설정되어 있습니다
+  ([`web/src/config/wagmi.ts`](./web/src/config/wagmi.ts)). `fund`/`withdraw` 직후 pending 블록
+  상태를 읽으면 `/docs`에 적힌 200ms 주장을 설명이 아니라 시연으로 만들 수 있습니다.
+
+**보안 강화**
+
+- ⬜ 컨트랙트 감사(GIWA 빌더 패키지).
+- ⬜ `pnpm check:i18n`이 코드의 `t()`에서 참조하지만 로케일 파일에 없는 키까지 잡도록 확장.
+  현재는 한/영 키 일치와 하드코딩된 JSX 문자열만 검사하므로, *양쪽 파일 모두에* 없는 키는 CI를
+  통과한 뒤 화면에 키 문자열 그대로 노출됩니다.
+
+### 3단계 — 확산(10–12월) ⬜
+
+- GIWA 지갑 인앱 탭. `/worker`는 이미 모바일 우선 · injected 커넥터 우선 · 단일 주요 액션으로
+  이를 염두에 두고 설계했으며, 남은 것은 지갑 측 임베딩 규격입니다.
+- `PROTOCOL_OWNER`를 멀티시그로 설정한 메인넷 배포.
+- 노동청 · 노동조합 파일럿: 현직 노무사의 증빙 페이지 검토, 기존 인쇄 경로에 더해 PDF 내보내기.
+- 다수 노동자를 운영하는 고용주를 위한 볼트 일괄 개설.
+
+**KPI 목표:** 월간 예치 볼트 · 활성 노동자 · 발행된 증빙 · 트랜잭션 규모.
 
 ---
 

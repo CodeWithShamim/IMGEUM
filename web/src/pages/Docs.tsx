@@ -18,7 +18,59 @@ const SECTIONS = [
   'giwa',
   'faq',
   'security',
+  'roadmap',
 ] as const;
+
+type Stage = 'done' | 'building' | 'planned';
+
+/**
+ * Roadmap content. Phase and item copy live in the locale files; the *status* of each item is
+ * data, not prose, so it stays here — one place to move a marker when something ships, and no
+ * risk of EN saying "shipped" while KO still says "planned".
+ */
+const ROADMAP: {phase: string; stage: Stage; items: [string, Stage][]}[] = [
+  {
+    phase: 'p1',
+    stage: 'done',
+    items: [
+      ['deployed', 'done'],
+      ['tests', 'done'],
+      ['demo', 'done'],
+      ['bilingual', 'done'],
+      ['network', 'done'],
+    ],
+  },
+  {
+    phase: 'p2',
+    stage: 'building',
+    items: [
+      ['forward', 'done'],
+      ['reverse', 'building'],
+      ['directory', 'building'],
+      ['profile', 'planned'],
+      ['erc20', 'building'],
+      ['oracle', 'planned'],
+      ['flashblocks', 'planned'],
+      ['audit', 'planned'],
+    ],
+  },
+  {
+    phase: 'p3',
+    stage: 'planned',
+    items: [
+      ['wallet', 'planned'],
+      ['mainnet', 'planned'],
+      ['pilot', 'planned'],
+      ['batch', 'planned'],
+    ],
+  },
+];
+
+const STAGE_STYLE: Record<Stage, string> = {
+  done: 'bg-nok text-ink',
+  building: 'bg-dan-gold text-ink',
+  planned: 'bg-ink/10 text-ink/60',
+};
 
 /**
  * In-app documentation, hanji paper mode, fully authored in EN and KO (language toggle in the
@@ -126,6 +178,11 @@ export default function Docs() {
                     <li>{t('docs:security.l5')}</li>
                   </ul>
                 </Prose>
+
+                <Prose id="roadmap" heading={t('docs:roadmap.heading')}>
+                  <p>{t('docs:roadmap.intro')}</p>
+                  <Roadmap />
+                </Prose>
               </article>
             </div>
           </div>
@@ -164,6 +221,58 @@ function DocLink({href, children}: {href: string; children: React.ReactNode}) {
         {children} ↗
       </a>
     </p>
+  );
+}
+
+/**
+ * Roadmap with per-item status. Marks are deliberately literal: "shipped" means it is running in
+ * this build, not that a contract exists somewhere behind it — a status board that flatters the
+ * project is worth less than one a reader can trust.
+ */
+function Roadmap() {
+  const {t} = useTranslation();
+  const stages: Stage[] = ['done', 'building', 'planned'];
+  return (
+    <div className="mt-4 space-y-5">
+      <div className="flex flex-wrap items-center gap-2">
+        {stages.map((s) => (
+          <StageChip key={s} stage={s} />
+        ))}
+      </div>
+
+      {ROADMAP.map(({phase, stage, items}) => (
+        <section key={phase} className="rounded border-2 border-ink/20 bg-ink/5 p-4">
+          <header className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h3 className="font-display text-lg font-bold text-ink">{t(`docs:roadmap.${phase}.title`)}</h3>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-ink/50">
+              {t(`docs:roadmap.${phase}.window`)}
+            </span>
+            <StageChip stage={stage} />
+          </header>
+          <ul className="space-y-2">
+            {items.map(([k, s]) => (
+              <li key={k} className="flex items-start gap-2.5 text-sm leading-relaxed text-ink/80">
+                <StageChip stage={s} inline />
+                <span>{t(`docs:roadmap.${phase}.items.${k}`)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function StageChip({stage, inline}: {stage: Stage; inline?: boolean}) {
+  const {t} = useTranslation();
+  return (
+    <span
+      className={`shrink-0 rounded px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide ${STAGE_STYLE[stage]} ${
+        inline ? 'mt-0.5' : ''
+      }`}
+    >
+      {t(`docs:roadmap.legend.${stage}`)}
+    </span>
   );
 }
 

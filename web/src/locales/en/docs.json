@@ -11,7 +11,8 @@
     "contracts": "Contracts & ABIs",
     "giwa": "GIWA integration notes",
     "faq": "FAQ",
-    "security": "Security & limitations"
+    "security": "Security & limitations",
+    "roadmap": "Roadmap & status"
   },
   "overview": {
     "heading": "Overview & the problem",
@@ -79,5 +80,49 @@
     "l3": "Pull-payments + reentrancy guards + checks-effects-interactions throughout; withdrawals are never pausable.",
     "l4": "up.id resolution is advisory only. A wrong name can never misroute funds — the worst case is a cosmetic label shown in an unverified state.",
     "l5": "Audit note: the stream math invariants (withdrawn ≤ earned ≤ wage, funded ≥ withdrawn) and the single-contract solvency invariant are the first things to review."
+  },
+  "roadmap": {
+    "heading": "Roadmap & status",
+    "intro": "Where IMGEUM actually is, phase by phase. Marks are literal: shipped means it runs in this build, in progress means the contract is there but the screen for it is not, and planned means not started.",
+    "legend": {
+      "done": "Shipped",
+      "building": "In progress",
+      "planned": "Planned"
+    },
+    "p1": {
+      "title": "Phase 1 — MVP",
+      "window": "Jun–Jul",
+      "items": {
+        "deployed": "Four contracts deployed and source-verified on GIWA Sepolia, wired to the live DojangScroll and UPNameRegistry. There is no mock verifier anywhere in the codebase.",
+        "tests": "Unit, fuzz, invariant and live-chain fork suites green, with >95% line coverage on the core contracts. Four vulnerabilities found during the move off mock mode are preserved as working exploits in the regression suite.",
+        "demo": "The whole path works end to end: register, open a vault, fund it, watch the stream, withdraw, record arrears, export evidence.",
+        "bilingual": "Every page authored in Korean and English, with a CI gate that fails the build on any untranslated string.",
+        "network": "Wrong-network detection with a single, de-duplicated switch prompt — no wallet popup storm on a page listing many vaults."
+      }
+    },
+    "p2": {
+      "title": "Phase 2 — Productize",
+      "window": "Aug–Sep",
+      "items": {
+        "forward": "Pay by name: an employer can type a worker's name.up.id when opening a vault, and it resolves to an address before the transaction is built.",
+        "reverse": "Show names in place of hex. Every address in the app — including the employer a worker most needs to recognise — still renders as raw hex; reverse resolution turns those into up.id names on vault cards and evidence pages.",
+        "directory": "A public employer directory, so a worker can look up a company's pay-reliability score before taking the job. The score is already computed on-chain; today only the employer themselves can see it.",
+        "profile": "Per-employer public profile: funding history and every arrears record ever filed against them, in one place.",
+        "erc20": "Stablecoin wage vaults. The contract already accepts any ERC-20 and handles fee-on-transfer tokens safely; the app currently opens ETH vaults only.",
+        "oracle": "Live KRW through the Upbit Oracle. Won amounts in the app are currently converted at a fixed display rate — an evidence page handed to a labour office needs a real one.",
+        "flashblocks": "Use Flashblocks preconfirmations so funding and withdrawal land in the interface in roughly 200ms, rather than the app merely describing that they can.",
+        "audit": "External contract audit through the GIWA builder package."
+      }
+    },
+    "p3": {
+      "title": "Phase 3 — Distribution",
+      "window": "Oct–Dec",
+      "items": {
+        "wallet": "GIWA Wallet in-app tab. The worker view is already built mobile-first around a single primary action for exactly this placement.",
+        "mainnet": "Mainnet deployment with protocol ownership held by a multisig.",
+        "pilot": "Labour-office and union pilot: the evidence layout reviewed by a practising labour attorney, plus PDF export alongside the current print path.",
+        "batch": "Batch vault opening for employers running payroll across many workers at once."
+      }
+    }
   }
 }
