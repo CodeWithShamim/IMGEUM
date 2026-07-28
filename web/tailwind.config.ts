@@ -2,8 +2,10 @@ import type {Config} from 'tailwindcss';
 
 /**
  * Neo-Dancheong design system (build spec §5).
- * Palette tokens are named exactly as specified; color always encodes meaning:
- *   gold = money, green = trust, vermilion = breach, cobalt = action.
+ * Three accent colors only, on the ink/hanji shell. Color always encodes meaning:
+ *   gold = money, acid lime = action + verified, coral = breach.
+ * `nok` and `jade-mist` are retained as aliases so existing markup keeps working:
+ * both resolve into the lime ramp, not a fourth hue.
  */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -12,11 +14,14 @@ export default {
       colors: {
         ink: '#0E0B16', // near-black indigo base
         hanji: '#F7F2E7', // warm paper white (evidence/docs)
-        cheong: '#2245FF', // electric cobalt (primary action)
-        vermil: '#FF3D2E', // vermilion (arrears, urgency, destructive)
+        cheong: '#C6FF00', // acid lime (primary action)
+        vermil: '#FF5C5C', // coral (arrears, urgency, destructive)
         'dan-gold': '#FFB300', // lacquer gold (money, earned wage, success)
-        nok: '#00C48C', // malachite green (solvency, verified)
-        'jade-mist': '#B8E8FF', // pale sky (subtle fills, hover washes)
+        nok: '#C6FF00', // alias of acid lime (solvency, verified)
+        'jade-mist': '#EAFFA8', // pale lime tint (subtle fills, hover washes)
+        // Acid lime is invisible on hanji paper (~1.05:1). Paper surfaces — the evidence
+        // document and the docs article — use this deep olive-lime instead (~5.9:1).
+        'cheong-deep': '#4C6300',
         // Derived shades used sparingly for surfaces on the ink shell.
         'ink-2': '#161227',
         'ink-3': '#211B38',
@@ -35,10 +40,10 @@ export default {
       },
       boxShadow: {
         // 2px offset HARD shadows in palette colors — not soft blur.
-        'hard-cheong': '2px 2px 0 0 #2245FF',
+        'hard-cheong': '2px 2px 0 0 #C6FF00',
         'hard-gold': '2px 2px 0 0 #FFB300',
-        'hard-vermil': '2px 2px 0 0 #FF3D2E',
-        'hard-nok': '2px 2px 0 0 #00C48C',
+        'hard-vermil': '2px 2px 0 0 #FF5C5C',
+        'hard-nok': '2px 2px 0 0 #C6FF00',
         'hard-ink': '2px 2px 0 0 #0E0B16',
         'hard-ink-lg': '4px 4px 0 0 #0E0B16',
         'hard-hanji': '2px 2px 0 0 rgba(14,11,22,0.9)',

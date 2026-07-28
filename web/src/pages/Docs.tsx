@@ -160,7 +160,7 @@ function Steps({items}: {items: string[]}) {
 function DocLink({href, children}: {href: string; children: React.ReactNode}) {
   return (
     <p className="mb-2">
-      <a href={href} target="_blank" rel="noreferrer" className="text-cheong underline hover:text-vermil">
+      <a href={href} target="_blank" rel="noreferrer" className="text-cheong-deep underline hover:text-vermil">
         {children} ↗
       </a>
     </p>

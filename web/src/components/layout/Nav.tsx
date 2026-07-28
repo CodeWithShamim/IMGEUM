@@ -83,9 +83,9 @@ function RoofMark() {
     <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden>
       <rect width="32" height="32" rx="6" fill="#0E0B16" stroke="#211B38" />
       <path d="M4 12 L16 5 L28 12" fill="none" stroke="#FFB300" strokeWidth="2.5" />
-      <rect x="8" y="13" width="16" height="3" fill="#2245FF" />
-      <rect x="8" y="18" width="16" height="3" fill="#00C48C" />
-      <rect x="8" y="23" width="16" height="3" fill="#FF3D2E" />
+      <rect x="8" y="13" width="16" height="3" fill="#FFB300" />
+      <rect x="8" y="18" width="16" height="3" fill="#D99700" />
+      <rect x="8" y="23" width="16" height="3" fill="#A87400" />
     </svg>
   );
 }

@@ -12,10 +12,9 @@ export function Loader({label}: {label?: string}) {
       <svg width="120" height="90" viewBox="0 0 120 90" fill="none" aria-hidden>
         <defs>
           <linearGradient id="dancheong-sweep" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#2245FF" />
-            <stop offset="33%" stopColor="#00C48C" />
-            <stop offset="66%" stopColor="#FFB300" />
-            <stop offset="100%" stopColor="#FF3D2E" />
+            <stop offset="0%" stopColor="#FFD466" />
+            <stop offset="50%" stopColor="#FFB300" />
+            <stop offset="100%" stopColor="#A87400" />
           </linearGradient>
         </defs>
         {/* Roof-beam outline. */}
@@ -30,7 +29,7 @@ export function Loader({label}: {label?: string}) {
           transition={{duration: 1.4, ease: EASE, repeat: Infinity, repeatType: 'reverse'}}
         />
         {/* Dancheong stripe fill under the roof. */}
-        {['#2245FF', '#00C48C', '#FFB300', '#FF3D2E'].map((col, i) => (
+        {['#FFB300', '#D99700', '#A87400'].map((col, i) => (
           <motion.rect
             key={col}
             x={26}

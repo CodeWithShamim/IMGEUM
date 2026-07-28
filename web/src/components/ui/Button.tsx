@@ -4,7 +4,7 @@ import type {ReactNode} from 'react';
 type Variant = 'cheong' | 'gold' | 'vermil' | 'nok' | 'ghost';
 
 const VARIANT: Record<Variant, string> = {
-  cheong: 'bg-cheong text-hanji border-ink shadow-hard-ink',
+  cheong: 'bg-cheong text-ink border-ink shadow-hard-ink',
   gold: 'bg-dan-gold text-ink border-ink shadow-hard-ink',
   vermil: 'bg-vermil text-hanji border-ink shadow-hard-ink',
   nok: 'bg-nok text-ink border-ink shadow-hard-ink',

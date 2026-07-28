@@ -117,7 +117,7 @@ export default function Evidence() {
       <div className="relative">
         <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-ink pb-4">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.25em] text-cheong">{t('evidence:issuedBy')}</p>
+            <p className="font-mono text-xs uppercase tracking-[0.25em] text-cheong-deep">{t('evidence:issuedBy')}</p>
             <h1 className="font-display text-2xl font-extrabold text-ink sm:text-3xl">{t('evidence:docTitle')}</h1>
             <p className="mt-1 text-sm text-ink/60">{t('evidence:docSubtitle')}</p>
             <p className="mt-1 font-mono text-sm text-ink/80">{t('evidence:recordNo', {id: recordId.toString()})}</p>
@@ -139,7 +139,7 @@ export default function Evidence() {
       </div>
 
       {/* Summary banner. */}
-      <div className={`mt-6 rounded border-2 p-4 ${outstanding > 0n ? 'border-vermil bg-vermil/10' : 'border-nok bg-nok/10'}`}>
+      <div className={`mt-6 rounded border-2 p-4 ${outstanding > 0n ? 'border-vermil bg-vermil/10' : 'border-cheong-deep bg-cheong-deep/10'}`}>
         <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-ink/60">
           {t('evidence:fields.shortfall')}
         </div>
@@ -279,7 +279,7 @@ function Row({
   tone?: 'nok' | 'vermil';
   link?: string;
 }) {
-  const color = tone === 'nok' ? 'text-nok' : tone === 'vermil' ? 'text-vermil' : 'text-ink';
+  const color = tone === 'nok' ? 'text-cheong-deep' : tone === 'vermil' ? 'text-vermil' : 'text-ink';
   const val = <span className={`${mono ? 'font-mono' : ''} text-sm font-semibold ${color}`}>{value}</span>;
   return (
     <div className="flex items-baseline justify-between gap-3">
@@ -300,7 +300,7 @@ function Row({
 /** The 도장/dojang seal metaphor — a vermilion stamp. Poetic, since Dojang verifies the employer. */
 function DojangSeal({breached}: {breached: boolean}) {
   const {t} = useTranslation();
-  const color = breached ? '#FF3D2E' : '#00C48C';
+  const color = breached ? '#FF5C5C' : '#C6FF00';
   return (
     <div
       className="flex h-24 w-24 flex-col items-center justify-center rounded-full border-4 text-center"
