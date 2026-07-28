@@ -49,8 +49,13 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
    */
   const vaultRef = useRef(vault);
   const fmtRef = useRef(fmt);
-  vaultRef.current = vault;
-  fmtRef.current = fmt;
+  // Written in the commit phase, not during render: under concurrent rendering a render that
+  // React discards would otherwise leave the loop drawing a vault that was never committed.
+  // One frame of lag on a 60fps counter is not observable; showing the wrong vault is.
+  useEffect(() => {
+    vaultRef.current = vault;
+    fmtRef.current = fmt;
+  }, [vault, fmt]);
 
   const rate = ratePerSecond(vault); // token base units per second, as a float
   const rateIsLive = rate > 0;
