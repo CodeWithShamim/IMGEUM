@@ -13,7 +13,9 @@ contract StreamMathFuzzTest is BaseTest {
     /// @dev earned() is monotonic non-decreasing in time and never exceeds wageAmount.
     function testFuzz_earned_monotonicAndCapped(uint128 amount, uint32 period, uint32 t1, uint32 t2) public {
         amount = uint128(bound(amount, 1, type(uint128).max));
-        period = uint32(bound(period, 1 hours, uint32(vault.MAX_PERIOD())));
+        // Lower bound is MIN_PERIOD, not an arbitrary hour: `openVault` refuses anything
+        // shorter (see WageVault.MIN_PERIOD and the score-farming exploit it closes).
+        period = uint32(bound(period, uint32(vault.MIN_PERIOD()), uint32(vault.MAX_PERIOD())));
         uint256 dt1 = bound(t1, 0, period + 10 days);
         uint256 dt2 = bound(t2, dt1, period + 10 days);
 

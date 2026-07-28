@@ -13,12 +13,13 @@ pragma solidity ^0.8.28;
 ///      - Names are issued only to Verified Address holders, are non-transferable SBTs, and
 ///        are immutable once registered (30-day grace period if verification lapses).
 ///
-///      What the docs do NOT publish (as of the build date): a resolver contract address on
-///      GIWA Sepolia, or a Solidity interface. Per build spec §2 we therefore define this
-///      thin interface ourselves and ship MockUpIdResolver behind it for the demo.
+///      What the docs do NOT publish: a Solidity interface for on-chain resolution. They do
+///      publish the registry address — UPNameRegistry at
+///      `GiwaConstants.UP_NAME_REGISTRY` (https://docs.giwa.io/network-information/contracts.md)
+///      — so IMGEUM defines this thin interface itself and ships `src/UpIdResolver.sol`, a
+///      stateless read adapter over that live registry. There is no mock in any deployment.
 ///
-///      IMPORTANT — this is deliberately NOT on the critical path. Because a up.id name is
-///      immutable and non-transferable but the *resolver deployment* is not yet public,
+///      IMPORTANT — this is deliberately NOT on the critical path.
 ///      EmployerRegistry stores the employer's up.id string as a self-declared display
 ///      label and marks it `upIdVerified = false` when no resolver is configured. Wage
 ///      routing, funding, withdrawal and arrears attestation all key off raw addresses and

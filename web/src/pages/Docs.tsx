@@ -208,12 +208,14 @@ function VerifyPanel() {
     ['WageVault', deployment.wageVault],
     ['ArrearsAttestor', deployment.arrearsAttestor],
     ['DojangVerifier', deployment.dojangVerifier],
+    ['UpIdResolver', deployment.upIdResolver],
+    ['UPNameRegistry', deployment.upNameRegistry],
   ];
   return (
     <div className="mt-3 rounded border-2 border-ink/20 bg-ink/5 p-4">
       <div className="mb-2 flex items-center gap-2">
         <h3 className="font-display text-sm font-bold uppercase tracking-wide text-ink">{t('docs:contracts.verifyPanel')}</h3>
-        {deployment.dojangMock && <Badge tone="gold">{t('common:status.mock')}</Badge>}
+        <Badge tone="nok">{t('common:status.liveIdentity')}</Badge>
       </div>
       <ul className="space-y-1.5">
         {rows.map(([name, addr]) => (

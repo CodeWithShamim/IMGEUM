@@ -317,27 +317,50 @@ contract WageVaultTest is BaseTest {
 
     /* -------------------------------- pausing ------------------------------- */
 
-    function test_pause_blocksOpenAndFundButNotWithdraw() public {
+    function test_pause_blocksOpenOnly() public {
         uint256 id = _openVault();
-        _fundETH(id, WAGE);
+        _fundETH(id, WAGE / 2);
         vm.warp(block.timestamp + PERIOD / 2);
 
         vm.prank(owner);
         vault.pause();
 
+        // New exposure is stopped.
         uint64 t = uint64(block.timestamp);
         vm.prank(employer);
         vm.expectRevert(Pausable.EnforcedPause.selector);
         vault.openVault(worker, WAGE, t, t + PERIOD, t + PERIOD + SETTLE, address(0));
 
-        vm.prank(employer);
-        vm.expectRevert(Pausable.EnforcedPause.selector);
-        vault.fund{value: 1}(id, 1);
+        // Funding an EXISTING vault stays open: a pause must never be able to fabricate
+        // arrears against an employer who is paying on schedule. See WageVault.pause().
+        _fundETH(id, WAGE / 2);
+        assertEq(vault.getVault(id).funded, WAGE, "employer can still finish funding while paused");
 
         // Withdrawals remain open — a pause must never strand earned wages.
         vm.prank(worker);
         uint256 got = vault.withdraw(id);
         assertGt(got, 0);
+
+        // And the vault can still be settled.
+        vm.warp(block.timestamp + PERIOD);
+        vault.closeVault(id);
+        assertTrue(vault.getVault(id).closed);
+    }
+
+    /// @dev Regression: a paused protocol must not push a paying employer into arrears.
+    function test_pause_cannotManufactureArrears() public {
+        uint256 id = _openVault();
+        _fundETH(id, WAGE / 2);
+
+        vm.prank(owner);
+        vault.pause();
+
+        vm.warp(block.timestamp + PERIOD);
+        _fundETH(id, WAGE / 2); // employer keeps paying despite the pause
+
+        _warpPastDeadline(id);
+        assertFalse(vault.isBreached(id), "a fully funded vault is never in arrears");
+        assertEq(registry.getEmployer(employer).arrearsCount, 0);
     }
 
     function test_pause_onlyOwner() public {

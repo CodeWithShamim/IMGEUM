@@ -70,7 +70,7 @@
     "q3": "Can an employer delete the evidence?",
     "a3": "No. The record is immutable and the token is soulbound — it cannot be transferred or burned.",
     "q4": "Is this real KYC on testnet?",
-    "a4": "On GIWA Sepolia the demo uses a mock verifier, clearly labeled MOCK VERIFICATION. The production build wires the real DojangScroll."
+    "a4": "IMGEUM reads GIWA's live DojangScroll on every deployment — there is no mock verifier. A wallet obtains its own Verified Address attestation in the GIWA Playground, and up.id names resolve against the real UPNameRegistry."
   },
   "security": {
     "heading": "Security model & known limitations",

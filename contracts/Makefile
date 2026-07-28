@@ -3,8 +3,8 @@
 -include .env
 export
 
-.PHONY: help install build test test-fuzz coverage snapshot fmt slither clean \
-        deploy-testnet deploy-testnet-live verify-env
+.PHONY: help install build test test-fork test-fuzz coverage snapshot fmt slither clean \
+        deploy-testnet deploy-testnet-dry deploy-mainnet verify-env
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -16,8 +16,11 @@ install: ## Install dependencies
 build: ## Compile contracts
 	forge build
 
-test: ## Run the full test suite
+test: ## Run the full test suite (fork tests skip without GIWA_SEPOLIA_RPC_URL)
 	forge test -vv
+
+test-fork: ## Run only the fork suite against live GIWA Sepolia
+	forge test --match-path "test/fork/*" -vvv
 
 test-fuzz: ## Run only fuzz + invariant suites with the CI profile (2048 runs)
 	FOUNDRY_PROFILE=ci forge test --match-path "test/*fuzz*" -vv
@@ -42,9 +45,10 @@ verify-env: ## Fail early if required deploy env vars are missing
 	@test -n "$(GIWA_SEPOLIA_RPC_URL)" || (echo "GIWA_SEPOLIA_RPC_URL unset — copy .env.example to .env" && exit 1)
 	@echo "env OK: RPC=$(GIWA_SEPOLIA_RPC_URL)"
 
-# Demo deploy: MockDojangScroll + faucet attester. Registers work at the booth.
-deploy-testnet: verify-env ## Deploy to GIWA Sepolia (demo / mock Dojang)
-	DOJANG_MODE=mock ATTESTER_MODE=faucet forge script script/Deploy.s.sol:Deploy \
+# Testnet deploy: real DojangScroll + real UPNameRegistry, gated on the TESTNET FAUCET
+# attester (the one a GIWA Sepolia wallet can obtain at https://sepolia-playground.giwa.io/).
+deploy-testnet: verify-env ## Deploy to GIWA Sepolia against the live Dojang + up.id
+	ATTESTER_MODE=faucet forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(GIWA_SEPOLIA_RPC_URL) \
 		--account deployer \
 		--broadcast \
@@ -52,9 +56,15 @@ deploy-testnet: verify-env ## Deploy to GIWA Sepolia (demo / mock Dojang)
 		--verifier blockscout \
 		--verifier-url $(BLOCKSCOUT_API_URL)
 
-# Production-shaped deploy: real DojangScroll predeploy + faucet attester (swap to upbit for mainnet).
-deploy-testnet-live: verify-env ## Deploy to GIWA Sepolia against the real DojangScroll
-	DOJANG_MODE=live ATTESTER_MODE=faucet forge script script/Deploy.s.sol:Deploy \
+# Dry run against the live chain state — simulates, never broadcasts.
+deploy-testnet-dry: verify-env ## Simulate the GIWA Sepolia deploy without broadcasting
+	ATTESTER_MODE=faucet forge script script/Deploy.s.sol:Deploy \
+		--rpc-url $(GIWA_SEPOLIA_RPC_URL) \
+		--sender $(DEPLOYER_ADDRESS)
+
+# Mainnet-shaped deploy: gated on the UPBIT KOREA attester (real KYC'd Korean entities).
+deploy-mainnet: verify-env ## Deploy gated on the Upbit Korea attester
+	ATTESTER_MODE=upbit forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(GIWA_SEPOLIA_RPC_URL) \
 		--account deployer \
 		--broadcast \

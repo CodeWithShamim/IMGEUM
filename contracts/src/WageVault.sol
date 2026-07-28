@@ -55,6 +55,7 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
     error InvalidPeriod();
     error InvalidDeadline();
     error PeriodTooLong();
+    error PeriodTooShort();
     error NoSuchVault(uint256 vaultId);
     error VaultIsClosed(uint256 vaultId);
     error NotWorker(uint256 vaultId, address caller);
@@ -82,6 +83,29 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
     ///      `wageAmount * elapsed` cannot be pushed toward overflow by an absurd period, and
     ///      so a worker cannot be locked into a decade-long stream by a malformed input.
     uint64 public constant MAX_PERIOD = 370 days;
+
+    /// @notice Shortest permitted time from opening a vault to the end of its pay period.
+    ///
+    /// @dev This is the floor that makes `EmployerRegistry.solvencyScore` mean anything.
+    ///      Without it, an employer could open a vault whose whole period was one second,
+    ///      fund it with 1 wei to a wallet they control, close it on time, and bank a clean
+    ///      settlement — a perfect `rated` score of 1000 in about three seconds. The score is
+    ///      the number IMGEUM asks workers to trust in a job posting, so a reputation that
+    ///      cheap is worse than no reputation at all.
+    ///
+    ///      Measured against `block.timestamp` at open, NOT against `periodStart`. Bounding
+    ///      `periodEnd - periodStart` alone would be trivially defeated by backdating
+    ///      `periodStart`; what has to be expensive is the *waiting*, because `closeVault`
+    ///      cannot run until `periodEnd`. Every settlement now costs at least a day of real
+    ///      elapsed time, which is what the score's design always assumed.
+    ///
+    ///      1 day, not longer: Korean 일용직 (daily-wage) work is a real and precarious
+    ///      population, and a daily pay period must remain expressible. This bounds the cost
+    ///      of forging reputation; it does not claim to make it impossible. An employer with
+    ///      a second wallet and patience can still inflate the lifetime ratio term — the
+    ///      recency penalty, which a farmed history cannot decay any faster, is what
+    ///      protects a worker looking at an employer who missed payroll last month.
+    uint64 public constant MIN_PERIOD = 1 days;
 
     /// @notice Longest permitted gap between period end and payout deadline.
     /// @dev Korea's Labor Standards Act requires settlement within 14 days of the end of
@@ -149,15 +173,30 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
         emit AttestorSet(newAttestor);
     }
 
-    /// @notice Pauses vault creation and funding.
-    /// @dev Deliberately does NOT pause `withdraw` or `closeVault`. A pause is an
-    ///      operational lever for the protocol owner; it must never become a way to strand
-    ///      a worker's already-earned wages. Withdrawals are permanently un-pausable.
+    /// @notice Pauses the opening of NEW vaults.
+    ///
+    /// @dev The pause covers `openVault` and nothing else. `withdraw`, `closeVault` and
+    ///      `fund` all keep working.
+    ///
+    ///      `withdraw` is unpausable so a pause can never strand a worker's earned wages.
+    ///
+    ///      `fund` is unpausable for a subtler reason. It used to be pausable, and that made
+    ///      the pause lever a way to MANUFACTURE arrears: an employer halfway through funding
+    ///      a vault would be locked out of topping it up, the payout deadline would pass, and
+    ///      anyone could then mint a permanent arrears record against an employer who was
+    ///      paying normally and had done nothing wrong. A blameless employer's score went to
+    ///      zero in a single owner transaction.
+    ///
+    ///      That is the mirror image of the attack `setAttestor` and `setRecorder` already
+    ///      defend against, and just as corrosive: evidence nobody can suppress is worth
+    ///      little if it is also evidence anybody can fabricate. Pausing deposits protects
+    ///      no one anyway — the money is the employer's own and it is flowing toward the
+    ///      worker. Stopping new exposure is what `openVault` being pausable is for.
     function pause() external onlyOwner {
         _pause();
     }
 
-    /// @notice Resumes vault creation and funding.
+    /// @notice Resumes the opening of new vaults.
     function unpause() external onlyOwner {
         _unpause();
     }
@@ -191,6 +230,8 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
         if (wageAmount == 0 || wageAmount > type(uint128).max) revert InvalidWageAmount();
         if (periodEnd <= periodStart || periodEnd <= block.timestamp) revert InvalidPeriod();
         if (periodEnd - periodStart > MAX_PERIOD) revert PeriodTooLong();
+        // Against `block.timestamp`, not `periodStart` — see MIN_PERIOD.
+        if (uint256(periodEnd) < block.timestamp + MIN_PERIOD) revert PeriodTooShort();
         if (payoutDeadline < periodEnd || payoutDeadline - periodEnd > MAX_SETTLEMENT_WINDOW) {
             revert InvalidDeadline();
         }
@@ -226,7 +267,9 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
     ///      owes — the exact failure this protocol exists to make impossible.
     /// @param vaultId The vault to fund.
     /// @param amount Amount to deposit. For native vaults this must equal `msg.value`.
-    function fund(uint256 vaultId, uint256 amount) external payable exists(vaultId) nonReentrant whenNotPaused {
+    /// @dev Not `whenNotPaused` — see `pause()`. Blocking deposits would let a pause
+    ///      fabricate arrears against an employer who was paying on schedule.
+    function fund(uint256 vaultId, uint256 amount) external payable exists(vaultId) nonReentrant {
         Vault storage v = _vaults[vaultId];
         if (v.closed) revert VaultIsClosed(vaultId);
         if (amount == 0) revert ZeroFundAmount();

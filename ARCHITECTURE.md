@@ -155,22 +155,38 @@ each with zero reverts.
 
 ---
 
-## 4. Dojang / up.id integration and the mock-swap plan
+## 4. Dojang / up.id integration — live, with no mock mode
 
-**Dojang** (`interfaces/IDojangVerifier.sol`) is call-compatible with the deployed DojangScroll
-(`0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9`, from the docs). `MockDojangScroll` implements the
-identical interface with open self-enrollment. `Deploy.s.sol` chooses via `DOJANG_MODE`; the
-chosen mode is written into `deployments/<chainId>.json`, and the frontend renders an explicit
-**"MOCK VERIFICATION"** banner whenever it's a mock — the demo never silently claims real KYC.
-The swap to live is one env var. On GIWA Sepolia the accepted attester is the **testnet-faucet**
-attester (demo-obtainable); mainnet uses **Upbit Korea**.
+**Dojang** (`interfaces/IDojangVerifier.sol`) targets the deployed DojangScroll at
+`0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9` on every deployment. `Deploy.s.sol` has no
+verifier switch and reverts if that address has no code on the target chain, so a deployment
+can never claim verification it cannot actually check. A wallet obtains its own Verified
+Address attestation at [the GIWA Playground](https://sepolia-playground.giwa.io/) — IMGEUM
+issues nothing. On GIWA Sepolia the accepted attester is the **testnet-faucet** attester;
+mainnet uses **Upbit Korea** (`ATTESTER_MODE`, both real).
 
-**up.id** is deliberately off the critical path. Names are ENS subdomains of `up.id`, so production
-resolution is client-side viem/ENS and the on-chain `upIdResolver` is set to `address(0)`
-(disabled). A self-declared name is stored as a display label and marked `upIdVerified = false`
-when unconfirmed. **Money is always routed by address, never by name** — a wrong or squatted name
-can at worst show a cosmetically wrong label in an unverified state. `MockUpIdResolver` powers the
-demo; a hostile resolver is `try/catch`-guarded so it can never brick registration.
+Two live-chain behaviours the interface docs do not state, both found by fork-testing against
+GIWA Sepolia and both now encoded in the code (`test/fork/GiwaLive.fork.t.sol`):
+
+1. `getVerifiedAddressAttestationUid` **reverts** with `AttestationExpired(uid, expiry)` when
+   an attestation is expired, revoked, or absent — the cases where `isVerified` merely returns
+   `false`. Every third-party read path guards it (`ArrearsAttestor._liveDojangUid`), because
+   otherwise an employer letting their verification lapse would blank the evidence page a
+   worker needs at the labour office. The frozen `record.employerDojangUid` snapshot is what
+   makes the evidence outlive the identity.
+2. Faucet attestations carry roughly a one-month expiry, so "verified now" and "was verified
+   when payroll failed" genuinely diverge inside a single pay period. `verifyRecord` returns
+   both and never collapses them.
+
+**up.id** resolves against the real **UPNameRegistry**
+(`0x091D00004f21eb2Fc30964A8a4995692d9b49628`) through `src/UpIdResolver.sol`, a stateless
+read adapter. It translates IMGEUM's full name (`hanuel.up.id`) to the registry's bare label
+(`tokenId == keccak256("hanuel")`), and returns `address(0)` unless the suffix matches exactly,
+the forward and reverse indexes agree, and the name is still active. It is still deliberately
+off the critical path: a self-declared name is a display label, marked `upIdVerified = false`
+when unconfirmed. **Money is always routed by address, never by name** — a squatted name can at
+worst show a cosmetically wrong label in an unverified state, and a hostile resolver is
+`try/catch`-guarded so it can never brick registration.
 
 ---
 

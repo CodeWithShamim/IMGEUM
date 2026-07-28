@@ -57,3 +57,23 @@ contract RejectingWorker {
         revert("no ETH");
     }
 }
+
+/// @notice A smart-contract wallet that holds ETH fine but implements no ERC-721 receiver.
+/// @dev Not an attacker — this is the ordinary shape of an account-abstraction wallet, and
+///      IMGEUM's worker view is explicitly designed as a GIWA Wallet in-app tab. Used to
+///      prove that arrears evidence can still be minted to such a worker; `_safeMint` would
+///      have reverted here, permanently denying this population the one thing the protocol
+///      exists to give them.
+contract SmartWalletWorker {
+    WageVault public immutable VAULT;
+
+    constructor(WageVault vault_) {
+        VAULT = vault_;
+    }
+
+    function withdraw(uint256 vaultId) external returns (uint256) {
+        return VAULT.withdraw(vaultId);
+    }
+
+    receive() external payable {}
+}

@@ -54,6 +54,10 @@ export const ACTIVE_CHAIN = giwaSepolia;
 /** External GIWA ecosystem links used across the UI and docs. */
 export const GIWA_LINKS = {
   faucet: 'https://faucet.giwa.io/',
+  // Where a wallet obtains its REAL Dojang Verified Address ("Dojang 발급") and its real
+  // username.up.id. IMGEUM has no self-enroll path of its own — registration is gated on
+  // whatever this issues. Source: https://docs.giwa.io/get-started/giwa-playground.md
+  playground: 'https://sepolia-playground.giwa.io/',
   explorer: GIWA_SEPOLIA_EXPLORER,
   docs: 'https://docs.giwa.io',
   connectDocs: 'https://docs.giwa.io/get-started/connect-to-giwa',
@@ -71,6 +75,8 @@ export const GIWA_LINKS = {
  */
 export const DOJANG = {
   scroll: '0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9',
+  // Source: https://docs.giwa.io/network-information/contracts.md
+  upNameRegistry: '0x091D00004f21eb2Fc30964A8a4995692d9b49628',
   eas: '0x4200000000000000000000000000000000000021',
   attesterUpbitKorea: '0xd99b42e778498aa3c9c1f6a012359130252780511687a35982e8e52735453034',
   attesterTestnetFaucet: '0xaa92f8c143657dde575de430aecaea6ca91f2e6072339b16932d426895d8d678',

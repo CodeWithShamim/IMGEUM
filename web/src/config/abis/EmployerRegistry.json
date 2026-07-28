@@ -714,6 +714,17 @@
   },
   {
     "type": "error",
+    "name": "RecorderIrrevocable",
+    "inputs": [
+      {
+        "name": "recorder",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "StringTooLong",
     "inputs": []
   },

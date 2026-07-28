@@ -1,33 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {IDojangVerifier} from "../interfaces/IDojangVerifier.sol";
+import {IDojangVerifier} from "../../src/interfaces/IDojangVerifier.sol";
 
 /// @title MockDojangScroll
-/// @notice Stand-in for GIWA's DojangScroll, for local tests and the GIWA Sepolia demo.
+/// @notice TEST-ONLY double for GIWA's DojangScroll.
 ///
-/// @dev THIS IS THE SWAP POINT — read this before demoing anything.
+/// @dev This contract is never deployed. It lives under `test/` precisely so that it cannot
+///      be: `script/Deploy.s.sol` wires the real DojangScroll at
+///      `GiwaConstants.DOJANG_SCROLL` (0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9,
+///      https://docs.giwa.io/giwa-ecosystem/dojang/contracts.md) on every chain, and there is
+///      no deploy-time switch that can substitute this one. A real Verified Address
+///      attestation is obtained by the wallet itself at https://sepolia-playground.giwa.io/.
 ///
-///      The real DojangScroll is live on GIWA Sepolia at
-///      0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9
-///      (https://docs.giwa.io/giwa-ecosystem/dojang/contracts.md) and IMGEUM's contracts
-///      call it through the identical `IDojangVerifier` interface. Nothing in
-///      EmployerRegistry or ArrearsAttestor knows which of the two it is talking to.
-///
-///      This mock exists for exactly one reason: a Verified Address attestation is issued to
-///      a *person* by Upbit Korea after real KYC. A demo wallet on a testnet cannot obtain
-///      one on demand, so a live-Dojang deployment would leave the demo unable to register a
-///      single employer.
-///
-///      Deployment policy, enforced in script/Deploy.s.sol:
-///        - DOJANG_MODE=live  -> wires the real DojangScroll address above. Use this for any
-///                               deployment whose registrations are meant to mean something.
-///        - DOJANG_MODE=mock  -> deploys this contract. Demo only.
-///      The deploy script writes the chosen mode into deployments/<chainId>.json, and the
-///      frontend reads it and renders an explicit "MOCK VERIFICATION" banner on every
-///      employer badge and evidence page. The demo never silently claims real KYC.
+///      Its only job is to let the unit and invariant suites drive the verified/unverified
+///      state machine deterministically, without forking. Fork coverage against the real
+///      DojangScroll lives in `test/fork/GiwaLive.fork.t.sol`.
 contract MockDojangScroll is IDojangVerifier {
     error NotOwner();
+
+    /// @notice The live DojangScroll's own error, reproduced byte for byte.
+    /// @dev Selector 0x8a1b950b. Observed on GIWA Sepolia: the real contract raises this from
+    ///      `getVerifiedAddressAttestationUid` whenever there is no valid attestation, rather
+    ///      than returning bytes32(0) as `IDojangVerifier` documents. An earlier version of
+    ///      this double returned 0, and that discrepancy hid a live bug where
+    ///      `ArrearsAttestor.verifyRecord` reverted for any employer whose attestation had
+    ///      lapsed. Keep this faithful: a double that is kinder than production is a trap.
+    error AttestationExpired(bytes32 uid, uint64 expiry);
 
     event MockVerificationSet(address indexed account, bytes32 indexed attesterId, bool verified, bytes32 uid);
 
@@ -36,9 +35,7 @@ contract MockDojangScroll is IDojangVerifier {
     mapping(address account => mapping(bytes32 attesterId => bool)) private _verified;
     mapping(address account => mapping(bytes32 attesterId => bytes32)) private _uids;
 
-    /// @notice Anyone may self-verify in the demo. Set false to restrict to the owner.
-    /// @dev Open by default so a judge can register an employer from their own wallet at the
-    ///      demo booth without us pre-seeding their address.
+    /// @notice Whether any address may mark itself verified in a test.
     bool public openEnrollment = true;
 
     constructor(address owner_) {
@@ -86,11 +83,18 @@ contract MockDojangScroll is IDojangVerifier {
     }
 
     /// @inheritdoc IDojangVerifier
+    /// @dev Reverts when unverified, exactly as the deployed DojangScroll does. See the
+    ///      `AttestationExpired` declaration above for why this asymmetry with `isVerified`
+    ///      is reproduced rather than smoothed over.
     function getVerifiedAddressAttestationUid(address primaryAddress, bytes32 attesterId)
         external
         view
         returns (bytes32)
     {
-        return _uids[primaryAddress][attesterId];
+        bytes32 uid = _uids[primaryAddress][attesterId];
+        if (!_verified[primaryAddress][attesterId]) {
+            revert AttestationExpired(uid, uint64(block.timestamp));
+        }
+        return uid;
     }
 }

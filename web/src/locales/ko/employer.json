@@ -6,11 +6,13 @@
     "heading": "기업 등록",
     "body": "등록은 Dojang 검증 주소로 제한되므로, 노동자는 볼트가 실제임을 알 수 있습니다.",
     "gateVerified": "귀하의 주소는 Dojang 검증을 받았습니다.",
-    "gateUnverified": "귀하의 주소는 아직 Dojang 검증을 받지 않았습니다.",
-    "gateMock": "데모 모드: 아래를 눌러 Dojang 검증을 시뮬레이션하세요.",
-    "mockVerifyCta": "Dojang 검증 시뮬레이션",
+    "gateUnverified": "이 지갑은 아직 Dojang 검증 주소를 보유하지 않았습니다.",
+    "gateHowTo": "IMGEUM은 GIWA의 실제 DojangScroll을 직접 조회하며, 직접 검증을 발급할 수 없습니다. GIWA 플레이그라운드에서 ‘Dojang 발급’을 완료한 뒤 다시 확인하세요.",
+    "getVerifiedCta": "GIWA에서 검증받기",
+    "recheckCta": "다시 확인",
     "upIdLabel": "up.id 이름",
     "upIdPlaceholder": "yourcompany.up.id",
+    "upIdDetected": "내 up.id 이름 사용: {{name}}",
     "displayNameLabel": "기업명",
     "displayNamePlaceholder": "주식회사 아크메",
     "submit": "기업 등록",
@@ -42,7 +44,8 @@
     "deadlineLabel": "지급 기한",
     "submit": "볼트 개설",
     "opening": "개설 중…",
-    "success": "볼트가 개설되었습니다"
+    "success": "볼트가 개설되었습니다",
+    "minPeriod": "급여 기간은 최소 {{count}}일 이상이어야 합니다 — 그보다 짧으면 컨트랙트가 거부합니다."
   },
   "vaults": {
     "heading": "내 볼트",

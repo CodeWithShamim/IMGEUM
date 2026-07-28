@@ -72,10 +72,9 @@ Names, `name.up.id`), and a public **pay-reliability score** employers can show 
 ```
 imgeum/
 ├── contracts/          Foundry project (Solidity ^0.8.28, OpenZeppelin v5)
-│   ├── src/            EmployerRegistry · WageVault · ArrearsAttestor · GiwaConstants
-│   │   ├── interfaces/ IDojangVerifier · IUpIdResolver · I{EmployerRegistry,WageVault}
-│   │   └── mocks/      MockDojangScroll · MockUpIdResolver (demo swap points)
-│   ├── test/           unit · fuzz · invariant suites
+│   ├── src/            EmployerRegistry · WageVault · ArrearsAttestor · UpIdResolver · GiwaConstants
+│   │   └── interfaces/ IDojangVerifier · IUpIdResolver · IUpNameRegistry · I{EmployerRegistry,WageVault}
+│   ├── test/           unit · fuzz · invariant · fork (live GIWA Sepolia) suites
 │   ├── script/         Deploy.s.sol (env-driven, writes deployments/<chainId>.json)
 │   └── Makefile        make test / coverage / deploy-testnet
 └── web/                Vite + React 18 + TS + Tailwind + wagmi/viem + framer-motion
@@ -98,11 +97,14 @@ math + tested invariants, trust model, and threat model.
 ```bash
 cd contracts
 make install          # forge install
-make test             # 74 tests: unit + fuzz + invariant
+make test             # 117 tests: unit + fuzz + invariant + live-chain fork
+make test-fork        # only the fork suite, against real GIWA Sepolia state
 make coverage         # >95% lines on the three core contracts
 
-# Deploy to GIWA Sepolia (demo mode: mock Dojang so a booth wallet can register)
+# Deploy to GIWA Sepolia. Identity is always GIWA's live DojangScroll + UPNameRegistry —
+# there is no mock mode, and the script reverts if either has no code on the target chain.
 cp .env.example .env  # then: cast wallet import deployer --interactive
+make deploy-testnet-dry   # simulate against live chain state first
 make deploy-testnet
 ```
 
@@ -132,7 +134,6 @@ pnpm build                        # tsc + vite, zero TS errors
 | `GIWA_SEPOLIA_RPC_URL` | Deploy RPC                                  | `https://sepolia-rpc.giwa.io` ([connect docs](https://docs.giwa.io/get-started/connect-to-giwa)) |
 | `BLOCKSCOUT_API_URL`   | Verification endpoint                       | `https://sepolia-explorer.giwa.io/api`                                                           |
 | `BLOCKSCOUT_API_KEY`   | Verification key                            | from the explorer                                                                                |
-| `DOJANG_MODE`          | `mock` (demo) or `live` (real DojangScroll) | `mock`                                                                                           |
 | `ATTESTER_MODE`        | `faucet` (testnet) or `upbit` (production)  | `faucet`                                                                                         |
 | `PROTOCOL_OWNER`       | Contract owner (multisig in prod)           | deployer                                                                                         |
 
@@ -142,6 +143,48 @@ pnpm build                        # tsc + vite, zero TS errors
 | ------------------------------- | --------------- | ------------------------- |
 | `VITE_GIWA_RPC_URL`             | Read RPC        | official GIWA Sepolia RPC |
 | `VITE_GIWA_FLASHBLOCKS_RPC_URL` | Flashblocks RPC | official flashblocks RPC  |
+
+---
+
+## Live deployment — GIWA Sepolia (chain 91342)
+
+All four contracts are deployed and source-verified, wired to GIWA's **real** identity
+infrastructure. There is no mock mode: registration is gated on the live DojangScroll, and a
+wallet obtains its own Verified Address at [the GIWA
+Playground](https://sepolia-playground.giwa.io/) ("Dojang 발급").
+
+| Contract | Address |
+| --- | --- |
+| `EmployerRegistry` | [`0xc7919F673f9886Eec01511ce66B7fBD23EA835E5`](https://sepolia-explorer.giwa.io/address/0xc7919F673f9886Eec01511ce66B7fBD23EA835E5) |
+| `WageVault` | [`0xf563E78ED45dDd8d324729aB37634d56800a839B`](https://sepolia-explorer.giwa.io/address/0xf563E78ED45dDd8d324729aB37634d56800a839B) |
+| `ArrearsAttestor` | [`0xc123985c09a0a9f3FC9077b5aB40B59dec9B4f4b`](https://sepolia-explorer.giwa.io/address/0xc123985c09a0a9f3FC9077b5aB40B59dec9B4f4b) |
+| `UpIdResolver` | [`0x9Bd42BfE3802B5419A75976E0cE0814ADF685404`](https://sepolia-explorer.giwa.io/address/0x9Bd42BfE3802B5419A75976E0cE0814ADF685404) |
+
+Read against GIWA's own contracts, not ours:
+
+| GIWA contract | Address | Role |
+| --- | --- | --- |
+| `DojangScroll` | `0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9` | Employer identity gate |
+| `UPNameRegistry` | `0x091D00004f21eb2Fc30964A8a4995692d9b49628` | `name.up.id` resolution |
+| Attester | `TESTNET_FAUCET` | Which Verified Address attestations count |
+
+---
+
+## Security
+
+Four vulnerabilities were found and fixed by moving off mock mode and onto the live chain.
+Each has a working exploit preserved as a regression test in
+[`contracts/test/Exploits.t.sol`](./contracts/test/Exploits.t.sol).
+
+| # | Issue | Impact | Fix |
+| --- | --- | --- | --- |
+| 1 | `getVerifiedAddressAttestationUid` **reverts** on the live DojangScroll for expired/revoked attestations, where `isVerified` returns `false` | An employer letting verification lapse blanked `verifyRecord` — the labour-office evidence page — for every arrears record naming them | Guarded read (`ArrearsAttestor._liveDojangUid`); the frozen snapshot outlives the identity |
+| 2 | No minimum pay period | A perfect, `rated` solvency score of 1000 farmable in **6 seconds** with 1-wei vaults to a controlled wallet | `WageVault.MIN_PERIOD`, measured from `block.timestamp` so backdating cannot buy the time back |
+| 3 | `setRecorder(attestor, false)` | One owner transaction permanently disabled arrears attestation, routing around the write-once `setAttestor` guarantee | Recorder grants are irrevocable; `attestArrears` also records history best-effort |
+| 4 | `_safeMint` + pausable `fund` | Smart-account workers could **never** receive evidence; and a pause manufactured arrears against employers who were paying on time | `_mint` (the token is soulbound anyway); `fund` is no longer pausable |
+
+`make test` runs 117 tests — unit, fuzz, invariant, and a fork suite executed against live
+GIWA Sepolia state.
 
 ---
 
@@ -159,8 +202,8 @@ Query · Zustand · react-router · react-i18next.
 ## Roadmap (mapped to GASOK phases)
 
 - **Phase 1 — MVP (Jun–Jul):** ✅ contracts + tests + bilingual app; testnet deploy; full demo path.
-- **Phase 2 — Productize (Aug–Sep):** swap mock Dojang → live DojangScroll; client-side ENS
-  resolution for up.id; Upbit Oracle for live KRW display; contract audit (Giwa builder package);
+- **Phase 2 — Productize (Aug–Sep):** ✅ live DojangScroll + live UPNameRegistry wired (no mock
+  mode remains); Upbit Oracle for live KRW display; contract audit (Giwa builder package);
   GIWA Wallet tab integration.
 - **KPI targets:** monthly funded vaults · active workers · attestations minted · transaction volume.
 

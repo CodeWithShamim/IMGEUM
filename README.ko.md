@@ -71,7 +71,6 @@ imgeum/
 ├── contracts/          Foundry 프로젝트 (Solidity ^0.8.28, OpenZeppelin v5)
 │   ├── src/            EmployerRegistry · WageVault · ArrearsAttestor · GiwaConstants
 │   │   ├── interfaces/ IDojangVerifier · IUpIdResolver · I{EmployerRegistry,WageVault}
-│   │   └── mocks/      MockDojangScroll · MockUpIdResolver (데모 교체 지점)
 │   ├── test/           단위 · 퍼즈 · 불변식 스위트
 │   ├── script/         Deploy.s.sol (환경변수 기반, deployments/<chainId>.json 기록)
 │   └── Makefile        make test / coverage / deploy-testnet

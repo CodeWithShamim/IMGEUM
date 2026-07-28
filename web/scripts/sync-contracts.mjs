@@ -12,7 +12,7 @@ const contracts = join(web, '..', 'contracts');
 const abiDir = join(web, 'src', 'config', 'abis');
 mkdirSync(abiDir, {recursive: true});
 
-for (const name of ['EmployerRegistry', 'WageVault', 'ArrearsAttestor']) {
+for (const name of ['EmployerRegistry', 'WageVault', 'ArrearsAttestor', 'UpIdResolver']) {
   const artifact = join(contracts, 'out', `${name}.sol`, `${name}.json`);
   if (!existsSync(artifact)) {
     console.warn(`skip ${name}: ${artifact} not found (run \`forge build\` first)`);

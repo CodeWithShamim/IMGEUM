@@ -13,8 +13,8 @@ export function useImgeum() {
   return {
     deployment,
     isDeployed: !!deployment,
-    isMock: deployment?.dojangMock ?? false,
     attesterId: deployment?.attesterId,
+    attesterMode: deployment?.attesterMode,
     registry: deployment
       ? ({address: deployment.employerRegistry, abi: abis.employerRegistry} as const)
       : undefined,
@@ -24,5 +24,6 @@ export function useImgeum() {
       : undefined,
     dojang: deployment?.dojangVerifier,
     upIdResolver: deployment?.upIdResolver,
+    upNameRegistry: deployment?.upNameRegistry,
   };
 }

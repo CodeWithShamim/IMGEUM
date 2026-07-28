@@ -107,6 +107,14 @@ contract ArrearsAttestor is ERC721, ReentrancyGuard {
         uint64 attestedAt
     );
 
+    /// @notice Emitted when the evidence record was minted but the employer's public history
+    ///         could not be updated.
+    /// @dev Should never fire. If it does, the employer's solvency score is understating
+    ///      their arrears and the discrepancy is auditable from this log alone.
+    /// @param recordId The evidence record that was still minted.
+    /// @param employer The employer whose history is now incomplete.
+    event ArrearsHistoryNotRecorded(uint256 indexed recordId, address indexed employer);
+
     /* -------------------------------------------------------------------------- */
     /*                                   STORAGE                                  */
     /* -------------------------------------------------------------------------- */
@@ -163,8 +171,10 @@ contract ArrearsAttestor is ERC721, ReentrancyGuard {
     ///      vault, and the evidence token always mints to the worker regardless of caller.
     ///
     ///      Checks-effects-interactions: the vault is marked (external call to a contract we
-    ///      deployed and whose `markArrears` is single-writer and non-reentrant), state is
-    ///      written, then `_safeMint` runs last since it can hand control to the worker.
+    ///      deployed and whose `markArrears` is single-writer and non-reentrant), then state
+    ///      is written, then the token is minted. Minting uses `_mint` rather than
+    ///      `_safeMint` — see the note at the call site — so no control is handed to the
+    ///      worker at any point.
     ///
     /// @param vaultId The vault to attest against.
     /// @return recordId The new evidence record / token ID.
@@ -207,11 +217,35 @@ contract ArrearsAttestor is ERC721, ReentrancyGuard {
         _workerRecords[v.worker].push(recordId);
         _employerRecords[v.employer].push(recordId);
 
-        REGISTRY.recordArrears(v.employer);
+        // Best-effort, never blocking. Minting the worker's evidence is the promise; updating
+        // the employer's public history is bookkeeping around it. If the registry ever refuses
+        // this write — a permissions change, a migration, a bug — the worker must still walk
+        // away with proof they were not paid, so the failure is surfaced as an event rather
+        // than reverting the whole attestation. See EmployerRegistry.setRecorder.
+        try REGISTRY.recordArrears(v.employer) {}
+        catch {
+            emit ArrearsHistoryNotRecorded(recordId, v.employer);
+        }
 
         emit ArrearsAttested(recordId, vaultId, v.employer, v.worker, shortfallAmount, uint64(block.timestamp));
 
-        _safeMint(v.worker, recordId);
+        // `_mint`, deliberately NOT `_safeMint`.
+        //
+        // `_safeMint` refuses any recipient contract that does not implement
+        // `IERC721Receiver`. That is the ordinary shape of an account-abstraction wallet —
+        // and IMGEUM's worker view is explicitly designed as a GIWA Wallet in-app tab, so
+        // smart-account workers are not an edge case here, they are the target user. Under
+        // `_safeMint` the whole attestation reverted for them, meaning that population could
+        // NEVER obtain arrears evidence, no matter who called.
+        //
+        // The receiver check exists to stop NFTs getting stranded in contracts that cannot
+        // move them on. These tokens are soulbound: nobody can ever move them on, by design.
+        // So the check protects nothing here while denying the protocol's core promise to
+        // exactly the workers most likely to be using a modern wallet.
+        //
+        // Bonus: dropping the receiver callback removes the only place `attestArrears` handed
+        // control to an external address, so the ordering concern noted above is now moot.
+        _mint(v.worker, recordId);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -244,8 +278,35 @@ contract ArrearsAttestor is ERC721, ReentrancyGuard {
     {
         record = _requireRecord(recordId);
         employerVerifiedNow = DOJANG.isVerified(record.employer, ATTESTER_ID);
-        dojangUidNow = DOJANG.getVerifiedAddressAttestationUid(record.employer, ATTESTER_ID);
+        dojangUidNow = _liveDojangUid(record.employer);
         stillOutstanding = VAULT.shortfall(record.vaultId);
+    }
+
+    /// @dev Reads the employer's CURRENT attestation UID, returning 0 instead of bubbling a
+    ///      revert.
+    ///
+    ///      This guard is not defensive boilerplate — it encodes observed behaviour of the
+    ///      deployed DojangScroll (0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9), confirmed on
+    ///      a GIWA Sepolia fork in test/fork/GiwaLive.fork.t.sol:
+    ///
+    ///        isVerified(...)                      -> returns false for an expired, revoked,
+    ///                                                or never-issued attestation.
+    ///        getVerifiedAddressAttestationUid(...) -> REVERTS in exactly those same cases,
+    ///                                                with AttestationExpired(uid, expiry).
+    ///
+    ///      Left unguarded, an employer whose Verified Address simply lapsed would brick
+    ///      `verifyRecord` for every arrears record naming them — silently deleting the
+    ///      evidence page a worker needs at the labour office, and handing employers a
+    ///      trivial way to do it on purpose. Historical evidence must outlive the identity
+    ///      that produced it: `record.employerDojangUid` is the frozen snapshot and is
+    ///      unaffected; this return value is only the "still verified today?" side-channel,
+    ///      which is legitimately 0 when there is nothing live to point at.
+    function _liveDojangUid(address employer) internal view returns (bytes32) {
+        try DOJANG.getVerifiedAddressAttestationUid(employer, ATTESTER_ID) returns (bytes32 uid) {
+            return uid;
+        } catch {
+            return bytes32(0);
+        }
     }
 
     /* -------------------------------------------------------------------------- */

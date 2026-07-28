@@ -16,10 +16,15 @@ export interface Deployment {
   employerRegistry: Address;
   wageVault: Address;
   arrearsAttestor: Address;
+  /** Always GIWA's live DojangScroll — there is no mock deployment mode. */
   dojangVerifier: Address;
+  /** IMGEUM's read adapter over the live UPNameRegistry. */
   upIdResolver: Address;
+  /** GIWA's live UPNameRegistry, behind `upIdResolver`. */
+  upNameRegistry: Address;
   attesterId: `0x${string}`;
-  dojangMock: boolean;
+  /** Which real Dojang attester registration is gated on. */
+  attesterMode: 'faucet' | 'upbit';
 }
 
 const all = deployments as Record<string, Deployment>;

@@ -23,6 +23,7 @@ contract EmployerRegistry is IEmployerRegistry, Ownable2Step {
     error AlreadyRegistered(address employer);
     error NotRegistered(address employer);
     error NotRecorder(address caller);
+    error RecorderIrrevocable(address recorder);
     error EmptyString();
     error StringTooLong();
     error ZeroAddress();
@@ -72,8 +73,9 @@ contract EmployerRegistry is IEmployerRegistry, Ownable2Step {
     bytes32 public immutable ATTESTER_ID;
 
     /// @notice Optional up.id resolver. address(0) disables on-chain name confirmation.
-    /// @dev Mutable precisely because up.id has no published GIWA Sepolia resolver yet:
-    ///      this is the documented swap point. Setting it only affects the cosmetic
+    /// @dev Set at deploy time to `src/UpIdResolver.sol`, a stateless adapter over GIWA's
+    ///      live UPNameRegistry. Mutable so the protocol can follow a registry migration
+    ///      without redeploying the whole stack. Setting it only affects the cosmetic
     ///      `upIdVerified` flag; it can never redirect funds.
     IUpIdResolver public upIdResolver;
 
@@ -126,6 +128,11 @@ contract EmployerRegistry is IEmployerRegistry, Ownable2Step {
         _checkString(displayName);
         _checkString(upId);
 
+        // Deliberately unguarded, unlike the read paths in ArrearsAttestor: the live
+        // DojangScroll reverts from this function precisely when there is no valid
+        // attestation, and `onlyDojangVerified` has just proven there is one. If it reverts
+        // anyway the verifier is not behaving as documented, and refusing to register beats
+        // recording an employer whose UID a labour office could never re-read from EAS.
         bytes32 uid = DOJANG.getVerifiedAddressAttestationUid(msg.sender, ATTESTER_ID);
 
         Employer storage e = _employers[msg.sender];
@@ -207,11 +214,29 @@ contract EmployerRegistry is IEmployerRegistry, Ownable2Step {
     /*                                    ADMIN                                   */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Authorises or revokes a contract permitted to write payment history.
+    /// @notice Authorises a contract to write payment history. Grants are PERMANENT.
+    ///
+    /// @dev Grant-only, and this asymmetry is the whole point.
+    ///
+    ///      `WageVault.setAttestor` is write-once specifically so that an owner "cannot
+    ///      install a no-op contract and quietly disable the entire evidence layer".
+    ///      Revocable recorders walked straight around that guarantee: `attestArrears` calls
+    ///      `recordArrears`, so a single `setRecorder(attestor, false)` would have made it
+    ///      permanently impossible for any worker to mint arrears evidence. The protocol's
+    ///      central promise is that the evidence layer keeps working when everyone else turns
+    ///      hostile — and "everyone else" has to include us.
+    ///
+    ///      The cost is that a compromised or buggy recorder cannot be switched off. That is
+    ///      the correct trade: a rogue recorder can inflate history (visible, and bounded by
+    ///      `MIN_PERIOD`), whereas a revoked recorder erases a worker's ability to prove they
+    ///      were not paid. `ArrearsAttestor` additionally records history best-effort, so
+    ///      evidence mints even if this write is refused for any reason at all.
+    ///
     /// @param recorder The WageVault or ArrearsAttestor address.
-    /// @param allowed Whether it may record.
+    /// @param allowed Must be true for an address that is not already a recorder.
     function setRecorder(address recorder, bool allowed) external onlyOwner {
         if (recorder == address(0)) revert ZeroAddress();
+        if (!allowed && isRecorder[recorder]) revert RecorderIrrevocable(recorder);
         isRecorder[recorder] = allowed;
         emit RecorderSet(recorder, allowed);
     }

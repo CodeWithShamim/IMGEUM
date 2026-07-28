@@ -13,7 +13,11 @@
     "wrongNetwork": "Switch to GIWA",
     "menu": "Menu"
   },
-  "lang": { "ko": "KO", "en": "EN", "switchTo": "Switch language" },
+  "lang": {
+    "ko": "KO",
+    "en": "EN",
+    "switchTo": "Switch language"
+  },
   "roles": {
     "worker": "Worker",
     "employer": "Employer",
@@ -22,8 +26,7 @@
   "status": {
     "verified": "Verified",
     "unverified": "Unverified",
-    "mock": "MOCK VERIFICATION",
-    "mockNote": "Demo deployment — Dojang identity is simulated, not real KYC.",
+    "liveIdentity": "LIVE IDENTITY",
     "onTime": "Paid on time",
     "streaming": "Streaming",
     "breached": "In arrears",

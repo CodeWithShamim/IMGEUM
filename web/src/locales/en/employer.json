@@ -6,11 +6,13 @@
     "heading": "Register your company",
     "body": "Registration is gated by a Dojang Verified Address, so workers know your vaults are real.",
     "gateVerified": "Your address is Dojang-verified.",
-    "gateUnverified": "Your address is not Dojang-verified yet.",
-    "gateMock": "Demo mode: click below to simulate Dojang verification.",
-    "mockVerifyCta": "Simulate Dojang verification",
+    "gateUnverified": "This wallet does not hold a Dojang Verified Address yet.",
+    "gateHowTo": "IMGEUM checks GIWA’s live DojangScroll directly and cannot issue verification itself. Claim yours in the GIWA Playground (\"Dojang 발급\"), then re-check here.",
+    "getVerifiedCta": "Get verified on GIWA",
+    "recheckCta": "Re-check",
     "upIdLabel": "up.id name",
     "upIdPlaceholder": "yourcompany.up.id",
+    "upIdDetected": "Use your up.id name: {{name}}",
     "displayNameLabel": "Company name",
     "displayNamePlaceholder": "Acme Co., Ltd.",
     "submit": "Register company",
@@ -42,7 +44,8 @@
     "deadlineLabel": "Payout deadline",
     "submit": "Open vault",
     "opening": "Opening…",
-    "success": "Vault opened"
+    "success": "Vault opened",
+    "minPeriod": "Pay period must be at least {{count}} day(s) — the contract rejects anything shorter."
   },
   "vaults": {
     "heading": "Your vaults",

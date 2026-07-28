@@ -39,6 +39,18 @@ interface IDojangVerifier {
     /// @dev IMGEUM snapshots this UID into every arrears record so a labour office can
     ///      independently re-read the attestation from EAS
     ///      (GiwaConstants.EAS `.getAttestation(uid)`) without trusting IMGEUM.
+    ///
+    ///      CALLERS MUST GUARD THIS. The `bytes32(0)` return documented below is what the
+    ///      interface promises, but the DEPLOYED DojangScroll does not honour it: on GIWA
+    ///      Sepolia it REVERTS with `AttestationExpired(bytes32 uid, uint64 expiry)`
+    ///      (selector 0x8a1b950b) when the attestation has expired, been revoked, or never
+    ///      existed — the same cases in which `isVerified` calmly returns false. Verified on
+    ///      a live fork in test/fork/GiwaLive.fork.t.sol.
+    ///
+    ///      Consequence: any *view* that a third party depends on must wrap this in `try`
+    ///      and treat a revert as "no live attestation" (see
+    ///      `ArrearsAttestor._liveDojangUid`). Only a path that has already established
+    ///      `isVerified == true` in the same transaction may call it bare.
     /// @param primaryAddress The wallet being checked.
     /// @param attesterId The Dojang attester identifier.
     /// @return uid The attestation UID, or bytes32(0) if unverified.

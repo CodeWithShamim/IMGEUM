@@ -62,6 +62,17 @@ library GiwaConstants {
     address internal constant ADDRESS_DOJANG_RESOLVER = 0x692009FE206C3F897867F6BF7B5B45506B747F9e;
 
     /* -------------------------------------------------------------------------- */
+    /*                          UP.ID (UPBIT WEB3 NAMES)                          */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice UPNameRegistry — the live `username.up.id` name registry on GIWA Sepolia.
+    /// @dev Source: https://docs.giwa.io/network-information/contracts.md
+    ///      Names are issued through the GIWA Playground (https://sepolia-playground.giwa.io/),
+    ///      and the registry gates issuance on the same DojangScroll + attester IMGEUM uses.
+    ///      `src/UpIdResolver.sol` adapts it to IMGEUM's `IUpIdResolver` read interface.
+    address internal constant UP_NAME_REGISTRY = 0x091D00004f21eb2Fc30964A8a4995692d9b49628;
+
+    /* -------------------------------------------------------------------------- */
     /*                             ATTESTER IDENTIFIERS                           */
     /* -------------------------------------------------------------------------- */
 

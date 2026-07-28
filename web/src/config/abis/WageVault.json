@@ -43,6 +43,19 @@
   },
   {
     "type": "function",
+    "name": "MIN_PERIOD",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "NATIVE",
     "inputs": [],
     "outputs": [
@@ -1012,6 +1025,11 @@
   {
     "type": "error",
     "name": "PeriodTooLong",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PeriodTooShort",
     "inputs": []
   },
   {

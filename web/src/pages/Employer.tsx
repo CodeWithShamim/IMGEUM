@@ -1,6 +1,6 @@
 import {useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {useAccount, useReadContract} from 'wagmi';
+import {useAccount, useBlock, useReadContract} from 'wagmi';
 import {parseEther} from 'viem';
 import type {Abi} from 'viem';
 import {Layout} from '../components/layout/Layout';
@@ -19,6 +19,7 @@ import {useSecondsClock} from '../hooks/useClock';
 import {vaultState, isNative, type Vault, type Address, NATIVE_TOKEN} from '../lib/vault';
 import {formatKRW} from '../lib/format';
 import {useLang} from '../hooks/useLang';
+import {GIWA_LINKS} from '../config/giwa';
 
 export default function Employer() {
   const {t} = useTranslation();
@@ -56,12 +57,14 @@ export default function Employer() {
 function RegisterPanel({onDone}: {onDone: () => void}) {
   const {t} = useTranslation();
   const {address} = useAccount();
-  const {registry, dojang, attesterId, isMock} = useImgeum();
+  const {registry, upIdResolver} = useImgeum();
   const {send, pending} = useTx();
   const [upId, setUpId] = useState('');
   const [name, setName] = useState('');
 
-  // Live Dojang status for the connected wallet.
+  // Live Dojang status for the connected wallet, read from GIWA's real DojangScroll through
+  // the registry. There is no simulate path: the wallet gets verified at the GIWA Playground
+  // or it does not register.
   const verified = useReadContract({
     address: registry?.address as Address,
     abi: registry?.abi as Abi,
@@ -71,21 +74,19 @@ function RegisterPanel({onDone}: {onDone: () => void}) {
   });
   const isVerified = (verified.data as boolean | undefined) ?? false;
 
-  // Mock verifier self-enroll (demo only).
-  const mockVerify = async () => {
-    if (!dojang || !attesterId) return;
-    const ok = await send(
-      {
-        address: dojang as Address,
-        abi: MOCK_DOJANG_ABI,
-        functionName: 'selfVerify',
-        args: [attesterId],
-      },
-      t('common:status.loading'),
-      t('common:status.verified'),
-    );
-    if (ok) void verified.refetch();
-  };
+  // The wallet's real up.id name, reverse-resolved from the live UPNameRegistry. Offered as a
+  // prefill rather than forced into the field, since the on-chain `upId` is a display label
+  // the employer may legitimately want to set differently.
+  const {data: ownedUpId} = useReadContract({
+    address: upIdResolver as Address,
+    abi: UP_ID_RESOLVER_ABI,
+    functionName: 'reverse',
+    args: address ? [address] : undefined,
+    query: {enabled: !!upIdResolver && !!address},
+  });
+  const detectedUpId = (ownedUpId as string | undefined) || '';
+
+  const recheck = () => void verified.refetch();
 
   const register = async () => {
     if (!registry) return;
@@ -112,15 +113,17 @@ function RegisterPanel({onDone}: {onDone: () => void}) {
           <div>
             <span className="flex items-center gap-2 text-sm text-hanji/70">
               <Badge tone="muted">{t('common:status.unverified')}</Badge>
-              {isMock ? t('employer:register.gateMock') : t('employer:register.gateUnverified')}
+              {t('employer:register.gateUnverified')}
             </span>
-            {isMock && (
-              <div className="mt-3">
-                <Button variant="nok" onClick={mockVerify} loading={pending}>
-                  {t('employer:register.mockVerifyCta')}
-                </Button>
-              </div>
-            )}
+            <p className="mt-2 text-xs text-hanji/50">{t('employer:register.gateHowTo')}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a href={GIWA_LINKS.playground} target="_blank" rel="noreferrer">
+                <Button variant="nok">{t('employer:register.getVerifiedCta')}</Button>
+              </a>
+              <Button variant="ghost" onClick={recheck} loading={verified.isFetching}>
+                {t('employer:register.recheckCta')}
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -139,6 +142,15 @@ function RegisterPanel({onDone}: {onDone: () => void}) {
           placeholder={t('employer:register.upIdPlaceholder')}
           mono
         />
+        {detectedUpId && detectedUpId !== upId && (
+          <button
+            type="button"
+            onClick={() => setUpId(detectedUpId)}
+            className="text-left text-xs text-cheong underline-offset-2 hover:underline"
+          >
+            {t('employer:register.upIdDetected', {name: detectedUpId})}
+          </button>
+        )}
         <Button
           variant="cheong"
           full
@@ -219,11 +231,33 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   const [wage, setWage] = useState('');
   const [days, setDays] = useState('30');
 
+  // The contract enforces a floor on how far ahead `periodEnd` may sit (WageVault.MIN_PERIOD,
+  // the guard that stops pay-reliability scores being farmed). Read it rather than hardcoding
+  // it, so the form can never drift out of step with a redeployed contract.
+  const {data: minPeriodRaw} = useReadContract({
+    address: vault?.address as Address,
+    abi: vault?.abi as Abi,
+    functionName: 'MIN_PERIOD',
+    query: {enabled: !!vault},
+  });
+  const minDays = minPeriodRaw ? Number(minPeriodRaw as bigint) / 86400 : 1;
+
+  // Anchor the period to CHAIN time, not the browser clock. A machine whose clock lags the
+  // chain would otherwise compute a `periodEnd` the contract reads as too near and reject,
+  // with no explanation the employer could act on.
+  const {data: block} = useBlock({query: {refetchInterval: 30_000}});
+
   const open = async () => {
     if (!vault) return;
-    const now = Math.floor(Date.now() / 1000);
-    const start = BigInt(now);
-    const end = BigInt(now + Number(days) * 86400);
+    const now = block?.timestamp ?? BigInt(Math.floor(Date.now() / 1000));
+
+    // Start the period a couple of minutes out rather than exactly now. `MIN_PERIOD` is
+    // checked against `block.timestamp` at mining time, so a period of exactly MIN_PERIOD
+    // anchored to "now" is guaranteed to fail: the chain has moved on by the time the
+    // transaction lands. The lead-in keeps the period exactly the length the employer asked
+    // for — it just begins shortly — instead of silently padding it.
+    const start = now + START_LEAD_IN;
+    const end = start + BigInt(Math.round(Number(days) * 86400));
     const deadline = end + BigInt(3 * 86400);
     const ok = await send(
       {
@@ -242,7 +276,8 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
     }
   };
 
-  const valid = worker.startsWith('0x') && worker.length === 42 && Number(wage) > 0;
+  const periodOk = Number(days) >= minDays;
+  const valid = worker.startsWith('0x') && worker.length === 42 && Number(wage) > 0 && periodOk;
 
   return (
     <div className="rounded border-2 border-ink bg-ink-2 p-4">
@@ -251,6 +286,7 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
         <Field label={t('employer:open.workerLabel')} value={worker} onChange={setWorker} placeholder={t('employer:open.workerPlaceholder')} mono />
         <Field label={`${t('employer:open.wageLabel')} (ETH)`} value={wage} onChange={setWage} placeholder="1.5" mono />
         <Field label={`${t('employer:open.endLabel')} (${t('common:units.perMonth')})`} value={days} onChange={setDays} placeholder="30" mono />
+        {!periodOk && <p className="text-xs text-vermil">{t('employer:open.minPeriod', {count: minDays})}</p>}
         <Button variant="cheong" full disabled={!valid} loading={pending} onClick={open}>
           {t('employer:open.submit')}
         </Button>
@@ -366,7 +402,25 @@ function Prompt({msg, tone}: {msg: string; tone?: 'vermil'}) {
   );
 }
 
-// Minimal ABI for the demo mock verifier's selfVerify (present only on mock deployments).
-const MOCK_DOJANG_ABI = [
-  {type: 'function', name: 'selfVerify', stateMutability: 'nonpayable', inputs: [{name: 'attesterId', type: 'bytes32'}], outputs: []},
+// Read-only slice of the deployed UpIdResolver, which adapts GIWA's live UPNameRegistry.
+// Inlined rather than synced because it is one view and IMGEUM never writes names — name
+// issuance happens at the GIWA Playground, outside this app.
+/**
+ * How far ahead of the current block a new pay period starts.
+ *
+ * Two minutes, which comfortably covers the gap between reading a block timestamp and having
+ * the transaction mined — including a stale cached read and a user who leaves the form open
+ * for a minute before signing. Without it, a period of exactly `MIN_PERIOD` reverts every
+ * time with `PeriodTooShort`, which reads as a broken app rather than a boundary condition.
+ */
+const START_LEAD_IN = 120n;
+
+const UP_ID_RESOLVER_ABI = [
+  {
+    type: 'function',
+    name: 'reverse',
+    stateMutability: 'view',
+    inputs: [{name: 'addr', type: 'address'}],
+    outputs: [{name: 'name', type: 'string'}],
+  },
 ] as const;

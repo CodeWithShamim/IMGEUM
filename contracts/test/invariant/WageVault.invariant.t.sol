@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {EmployerRegistry} from "../../src/EmployerRegistry.sol";
 import {WageVault} from "../../src/WageVault.sol";
 import {ArrearsAttestor} from "../../src/ArrearsAttestor.sol";
-import {MockDojangScroll} from "../../src/mocks/MockDojangScroll.sol";
+import {MockDojangScroll} from "../mocks/MockDojangScroll.sol";
 import {GiwaConstants} from "../../src/GiwaConstants.sol";
 import {IWageVault} from "../../src/interfaces/IWageVault.sol";
 import {VaultHandler} from "./VaultHandler.sol";

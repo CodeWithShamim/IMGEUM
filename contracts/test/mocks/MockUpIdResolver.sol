@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {IUpIdResolver} from "../interfaces/IUpIdResolver.sol";
+import {IUpIdResolver} from "../../src/interfaces/IUpIdResolver.sol";
 
 /// @title MockUpIdResolver
-/// @notice Stand-in for up.id name resolution on GIWA Sepolia.
+/// @notice TEST-ONLY double for up.id name resolution.
 ///
-/// @dev SWAP POINT. up.id names are ENS subdomains of `up.id`
-///      (https://docs.giwa.io/giwa-ecosystem/up-id.md), so the production read path is plain
-///      ENS resolution — the frontend uses viem's ENS helpers and this contract disappears
-///      entirely. On-chain, `EmployerRegistry.setUpIdResolver(address(0))` disables name
-///      confirmation, which is the correct production setting once ENS resolution moves to
-///      the client.
+/// @dev Never deployed. Production resolution goes through `src/UpIdResolver.sol`, which
+///      reads the real UPNameRegistry at `GiwaConstants.UP_NAME_REGISTRY`
+///      (https://docs.giwa.io/network-information/contracts.md).
 ///
-///      Names here mirror up.id's real semantics: immutable and non-transferable once
-///      claimed, so a demo cannot show a behaviour the real system would not allow.
+///      This double exists so the EmployerRegistry suite can exercise the
+///      resolved / not-resolved / resolver-reverts branches without forking. Its semantics
+///      mirror up.id's: one name per address, immutable and non-transferable once claimed —
+///      a test can never show behaviour the real registry would not allow.
 contract MockUpIdResolver is IUpIdResolver {
     error NameTaken(string name);
     error AlreadyNamed(address owner);

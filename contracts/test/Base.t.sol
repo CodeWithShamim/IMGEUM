@@ -6,8 +6,8 @@ import {Test} from "forge-std/Test.sol";
 import {EmployerRegistry} from "../src/EmployerRegistry.sol";
 import {WageVault} from "../src/WageVault.sol";
 import {ArrearsAttestor} from "../src/ArrearsAttestor.sol";
-import {MockDojangScroll} from "../src/mocks/MockDojangScroll.sol";
-import {MockUpIdResolver} from "../src/mocks/MockUpIdResolver.sol";
+import {MockDojangScroll} from "./mocks/MockDojangScroll.sol";
+import {MockUpIdResolver} from "./mocks/MockUpIdResolver.sol";
 import {GiwaConstants} from "../src/GiwaConstants.sol";
 import {MockERC20} from "./mocks/TestTokens.sol";
 

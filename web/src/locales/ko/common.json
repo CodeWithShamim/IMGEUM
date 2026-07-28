@@ -13,7 +13,11 @@
     "wrongNetwork": "GIWA로 전환",
     "menu": "메뉴"
   },
-  "lang": { "ko": "KO", "en": "EN", "switchTo": "언어 변경" },
+  "lang": {
+    "ko": "KO",
+    "en": "EN",
+    "switchTo": "언어 변경"
+  },
   "roles": {
     "worker": "노동자",
     "employer": "사업주",
@@ -22,8 +26,7 @@
   "status": {
     "verified": "검증됨",
     "unverified": "미검증",
-    "mock": "모의 검증",
-    "mockNote": "데모 배포 — Dojang 신원은 실제 KYC가 아닌 시뮬레이션입니다.",
+    "liveIdentity": "실제 신원 검증",
     "onTime": "정시 지급",
     "streaming": "스트리밍 중",
     "breached": "임금체불",
