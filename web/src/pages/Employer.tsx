@@ -1,7 +1,7 @@
 import {useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useAccount, useBlock, useReadContract} from 'wagmi';
-import {parseEther} from 'viem';
+import {isAddress, parseEther} from 'viem';
 import type {Abi} from 'viem';
 import {Layout} from '../components/layout/Layout';
 import {TileWipe} from '../components/motion/TileWipe';
@@ -17,7 +17,7 @@ import {useEmployerVaultIds, useVaults} from '../hooks/useVaults';
 import {useTx} from '../hooks/useTx';
 import {useSecondsClock} from '../hooks/useClock';
 import {vaultState, isNative, type Vault, type Address, NATIVE_TOKEN} from '../lib/vault';
-import {formatKRW} from '../lib/format';
+import {formatKRW, shortAddress} from '../lib/format';
 import {useLang} from '../hooks/useLang';
 import {GIWA_LINKS, ACTIVE_CHAIN} from '../config/giwa';
 
@@ -227,11 +227,34 @@ function RegisteredConsole({employer, emp}: {employer: Address; emp: ReturnType<
 
 function OpenVaultForm({onDone}: {onDone: () => void}) {
   const {t} = useTranslation();
-  const {vault} = useImgeum();
+  const {vault, upIdResolver} = useImgeum();
   const {send, pending} = useTx();
   const [worker, setWorker] = useState('');
   const [wage, setWage] = useState('');
   const [days, setDays] = useState('30');
+
+  // The field accepts either representation, because that is what it advertises. Workers hand
+  // out `name.up.id`; only the contract insists on an address. Resolution happens here rather
+  // than in the user's head.
+  const entry = worker.trim();
+  const typedAddress = isAddress(entry) ? (entry as Address) : undefined;
+  const looksLikeName = !typedAddress && entry.endsWith(UP_ID_SUFFIX) && entry.length > UP_ID_SUFFIX.length;
+
+  const resolution = useReadContract({
+    address: upIdResolver as Address,
+    abi: UP_ID_RESOLVER_ABI,
+    chainId: ACTIVE_CHAIN.id,
+    functionName: 'resolve',
+    args: looksLikeName ? [entry] : undefined,
+    query: {enabled: !!upIdResolver && looksLikeName},
+  });
+
+  // `resolve` answers address(0) for anything it will not vouch for — unissued, lapsed, or a
+  // stale forward entry — so a zero is a "no", never an address to pay.
+  const resolved = resolution.data as Address | undefined;
+  const resolvedAddress = resolved && resolved !== NATIVE_TOKEN ? resolved : undefined;
+  const workerAddress = typedAddress ?? resolvedAddress;
+  const nameUnresolved = looksLikeName && !resolution.isFetching && !resolvedAddress;
 
   // The contract enforces a floor on how far ahead `periodEnd` may sit (WageVault.MIN_PERIOD,
   // the guard that stops pay-reliability scores being farmed). Read it rather than hardcoding
@@ -251,7 +274,7 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   const {data: block} = useBlock({chainId: ACTIVE_CHAIN.id, query: {refetchInterval: 30_000}});
 
   const open = async () => {
-    if (!vault) return;
+    if (!vault || !workerAddress) return;
     const now = block?.timestamp ?? BigInt(Math.floor(Date.now() / 1000));
 
     // Start the period a couple of minutes out rather than exactly now. `MIN_PERIOD` is
@@ -267,7 +290,7 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
         address: vault.address as Address,
         abi: vault.abi,
         functionName: 'openVault',
-        args: [worker as Address, parseEther(wage || '0'), start, end, deadline, NATIVE_TOKEN],
+        args: [workerAddress, parseEther(wage || '0'), start, end, deadline, NATIVE_TOKEN],
       },
       t('employer:open.opening'),
       t('employer:open.success'),
@@ -280,13 +303,25 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   };
 
   const periodOk = Number(days) >= minDays;
-  const valid = worker.startsWith('0x') && worker.length === 42 && Number(wage) > 0 && periodOk;
+  const valid = !!workerAddress && Number(wage) > 0 && periodOk;
 
   return (
     <div className="rounded border-2 border-ink bg-ink-2 p-4">
       <h3 className="font-display text-lg font-bold">{t('employer:open.heading')}</h3>
       <div className="mt-3 space-y-3">
         <Field label={t('employer:open.workerLabel')} value={worker} onChange={setWorker} placeholder={t('employer:open.workerPlaceholder')} mono />
+        {looksLikeName && resolution.isFetching && (
+          <p className="text-xs text-hanji/50">{t('employer:open.workerResolving')}</p>
+        )}
+        {resolvedAddress && (
+          <p className="font-mono text-xs text-nok">
+            {t('employer:open.workerResolved', {address: shortAddress(resolvedAddress)})}
+          </p>
+        )}
+        {nameUnresolved && <p className="text-xs text-vermil">{t('employer:open.workerNotFound')}</p>}
+        {!!entry && !typedAddress && !looksLikeName && (
+          <p className="text-xs text-vermil">{t('employer:open.workerInvalid')}</p>
+        )}
         <Field label={`${t('employer:open.wageLabel')} (ETH)`} value={wage} onChange={setWage} placeholder="1.5" mono />
         <Field label={`${t('employer:open.endLabel')} (${t('common:units.perMonth')})`} value={days} onChange={setDays} placeholder="30" mono />
         {!periodOk && <p className="text-xs text-vermil">{t('employer:open.minPeriod', {count: minDays})}</p>}
@@ -418,6 +453,9 @@ function Prompt({msg, tone}: {msg: string; tone?: 'vermil'}) {
  */
 const START_LEAD_IN = 120n;
 
+/** The only suffix up.id issues, mirroring `UpIdResolver.SUFFIX`. */
+const UP_ID_SUFFIX = '.up.id';
+
 const UP_ID_RESOLVER_ABI = [
   {
     type: 'function',
@@ -425,5 +463,12 @@ const UP_ID_RESOLVER_ABI = [
     stateMutability: 'view',
     inputs: [{name: 'addr', type: 'address'}],
     outputs: [{name: 'name', type: 'string'}],
+  },
+  {
+    type: 'function',
+    name: 'resolve',
+    stateMutability: 'view',
+    inputs: [{name: 'name', type: 'string'}],
+    outputs: [{name: 'owner', type: 'address'}],
   },
 ] as const;
