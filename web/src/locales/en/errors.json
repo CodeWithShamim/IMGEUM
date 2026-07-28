@@ -10,6 +10,7 @@
   "notRegistered": "Register your company first.",
   "invalidWorker": "Enter a valid worker address or up.id.",
   "invalidAmount": "Enter a valid amount.",
+  "invalidToken": "That address holds no token contract on GIWA. Check the address and the network.",
   "invalidPeriod": "Period end must be in the future and after the start.",
   "invalidDeadline": "Deadline must be on or after the period end, within 30 days.",
   "notBreached": "This vault isn't in arrears yet.",

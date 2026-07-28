@@ -2,9 +2,8 @@ import {useEffect, useImperativeHandle, useRef, forwardRef} from 'react';
 import {useTranslation} from 'react-i18next';
 import {usePrefersReducedMotion} from '../../hooks/usePrefersReducedMotion';
 import {useAnimationClock} from '../../hooks/useClock';
-import {useLang} from '../../hooks/useLang';
+import {useAmountFormat} from '../../hooks/useToken';
 import {earnedFloat, ratePerSecond, type Vault} from '../../lib/vault';
-import {formatKRW} from '../../lib/format';
 
 export interface WageStreamHandle {
   /** Fire a burst of coins — called when a VaultFunded event lands (~1s after payment). */
@@ -30,7 +29,7 @@ interface Coin {
  */
 export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function WageStream({vault}, ref) {
   const {t} = useTranslation();
-  const {lang} = useLang();
+  const fmt = useAmountFormat(vault.token);
   const reduced = usePrefersReducedMotion();
   const nowMs = useAnimationClock();
 
@@ -132,8 +131,8 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
     const el = counterRef.current;
     if (!el) return;
     const earned = earnedFloat(vault, nowMs);
-    el.textContent = formatKRW(BigInt(Math.floor(earned)), lang);
-  }, [nowMs, vault, lang]);
+    el.textContent = fmt(BigInt(Math.floor(earned)));
+  }, [nowMs, vault, fmt]);
 
   return (
     <div className="relative overflow-hidden rounded border-2 border-ink bg-ink-2 p-5">
@@ -161,7 +160,7 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
         —
       </div>
       <div className="mt-1 font-mono text-xs text-nok">
-        + {rateEthPerSec > 0 ? formatKRW(BigInt(Math.floor(rate)), lang) : '—'} {t('common:units.perSecond')}
+        + {rateEthPerSec > 0 ? fmt(BigInt(Math.floor(rate))) : '—'} {t('common:units.perSecond')}
       </div>
     </div>
   );

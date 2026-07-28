@@ -18,15 +18,43 @@ export interface Vault {
   withdrawn: bigint;
 }
 
-export type VaultState = 'streaming' | 'settled' | 'breached' | 'pending';
+export type VaultState = 'streaming' | 'ended' | 'settled' | 'breached' | 'pending';
 
+/**
+ * Mirrors the contract's view of where a vault stands.
+ *
+ * Two orderings here are load-bearing:
+ *
+ * 1. `arrearsAttested` is checked BEFORE `closed`. A vault that was underfunded, attested, and
+ *    then closed is not a clean settlement — closing it is bookkeeping the contract requires
+ *    before an employer can walk away. Reporting it as 'settled' dropped it out of the worker's
+ *    arrears list, taking the link to their own evidence record with it, and showed the breach
+ *    as a tidy grey "Settled" badge on the employer's console.
+ *
+ * 2. 'ended' exists at all because `closeVault` becomes callable at `periodEnd`, not at
+ *    `payoutDeadline`. Without this state, a fully funded vault whose period had finished still
+ *    read as 'streaming' — forever, since nothing else would ever move it — which hid the
+ *    employer's Close button. That is the transaction that pays back overfunding AND records
+ *    the on-time settlement, so the employer could never bank the very reputation the protocol
+ *    is built to give them.
+ */
 export function vaultState(v: Vault, nowSec: number): VaultState {
-  if (v.closed) return 'settled';
   const now = BigInt(Math.floor(nowSec));
   if (v.arrearsAttested) return 'breached';
+  if (v.closed) return 'settled';
   if (now > v.payoutDeadline && earnedAt(v, nowSec) > v.funded) return 'breached';
   if (now < v.periodStart) return 'pending';
+  if (now >= v.periodEnd) return 'ended';
   return 'streaming';
+}
+
+/** Whether `closeVault` would be accepted right now (settlement is permissionless). */
+export function canClose(v: Vault, nowSec: number): boolean {
+  if (v.closed) return false;
+  const now = BigInt(Math.floor(nowSec));
+  if (now < v.periodEnd) return false;
+  // A shortfall must reach the evidence layer before the vault can be closed.
+  return v.funded >= v.wageAmount || v.arrearsAttested;
 }
 
 /**

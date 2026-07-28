@@ -2,6 +2,7 @@ import type {Abi, Address} from 'viem';
 import EmployerRegistryAbi from './abis/EmployerRegistry.json';
 import WageVaultAbi from './abis/WageVault.json';
 import ArrearsAttestorAbi from './abis/ArrearsAttestor.json';
+import UpIdResolverAbi from './abis/UpIdResolver.json';
 import deployments from './deployments.json';
 import {GIWA_SEPOLIA_CHAIN_ID} from './giwa';
 
@@ -39,4 +40,5 @@ export const abis = {
   employerRegistry: EmployerRegistryAbi as Abi,
   wageVault: WageVaultAbi as Abi,
   arrearsAttestor: ArrearsAttestorAbi as Abi,
+  upIdResolver: UpIdResolverAbi as Abi,
 } as const;

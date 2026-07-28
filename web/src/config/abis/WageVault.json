@@ -911,6 +911,17 @@
   },
   {
     "type": "error",
+    "name": "InvalidToken",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "InvalidWageAmount",
     "inputs": []
   },

@@ -386,6 +386,10 @@ contract ArrearsAttestor is ERC721, ReentrancyGuard {
     /// @dev Rendered as a base64 data URI with no external host. An evidence record whose
     ///      metadata lived on IPFS or an IMGEUM server would be evidence that expires when a
     ///      pin drops or a company folds; this one outlives the protocol.
+    ///
+    ///      `employerName` is the one field here an ADVERSARY controls: it is copied verbatim
+    ///      from whatever string the employer passed to `EmployerRegistry.register`. It is
+    ///      therefore escaped, not interpolated — see `_escapeJson`.
     /// @param tokenId The evidence record ID.
     /// @return A base64-encoded `application/json` data URI.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -402,7 +406,7 @@ contract ArrearsAttestor is ERC721, ReentrancyGuard {
             "On-chain evidence that wages were not escrowed by the payout deadline. Non-transferable.",
             '","attributes":[',
             '{"trait_type":"Employer","value":"',
-            r.employerName,
+            _escapeJson(r.employerName),
             '"},',
             '{"trait_type":"Employer Address","value":"',
             r.employer.toHexString(),
@@ -432,5 +436,66 @@ contract ArrearsAttestor is ERC721, ReentrancyGuard {
     function _requireRecord(uint256 recordId) internal view returns (ArrearsRecord memory) {
         if (recordId == 0 || recordId > _recordCount) revert NoSuchRecord(recordId);
         return _records[recordId];
+    }
+
+    /// @dev Escapes a string for safe interpolation into a JSON string literal (RFC 8259 §7).
+    ///
+    ///      This is a security control, not tidiness. `employerName` is chosen by the employer
+    ///      — the party the evidence accuses — and was previously concatenated into the
+    ///      metadata raw. A name of the form
+    ///
+    ///        Acme","value":"x"},{"trait_type":"Shortfall","value":"0"},{"trait_type":"z
+    ///
+    ///      closes the Employer trait and injects a SECOND, earlier "Shortfall" trait reading
+    ///      zero. The result is still well-formed JSON, so wallets and marketplaces render it,
+    ///      and readers that take the first match for a trait see a breach of nothing. A lone
+    ///      `"` is the cruder version: the document becomes invalid and the evidence renders
+    ///      nowhere at all. Either way an employer edits their own indictment, which is the
+    ///      single thing this contract exists to prevent.
+    ///
+    ///      Escaped: `"` and `\` (the two characters that can leave a string literal) plus
+    ///      C0 control bytes, which JSON forbids unescaped. Bytes >= 0x80 pass through
+    ///      untouched — they are UTF-8 continuation bytes of a legitimate Korean company name,
+    ///      and JSON documents are UTF-8.
+    ///
+    ///      Bounded work: `MAX_STRING_BYTES` (256) caps the input, and `\u00XX` is the longest
+    ///      expansion at 6 bytes, so the buffer is at most 1536 bytes on a view function.
+    function _escapeJson(string memory s) internal pure returns (string memory) {
+        bytes memory b = bytes(s);
+        bytes memory out = new bytes(b.length * 6);
+        uint256 n;
+
+        for (uint256 i; i < b.length; ++i) {
+            uint8 c = uint8(b[i]);
+            if (c == 0x22) {
+                // '"'
+                out[n++] = "\\";
+                out[n++] = '"';
+            } else if (c == 0x5c) {
+                // '\'
+                out[n++] = "\\";
+                out[n++] = "\\";
+            } else if (c < 0x20) {
+                out[n++] = "\\";
+                out[n++] = "u";
+                out[n++] = "0";
+                out[n++] = "0";
+                out[n++] = _hexDigit(c >> 4);
+                out[n++] = _hexDigit(c & 0x0f);
+            } else {
+                out[n++] = bytes1(c);
+            }
+        }
+
+        // Truncate the over-allocated buffer to what was actually written.
+        assembly ("memory-safe") {
+            mstore(out, n)
+        }
+        return string(out);
+    }
+
+    /// @dev Lowercase hex digit for a nibble.
+    function _hexDigit(uint8 nibble) private pure returns (bytes1) {
+        return bytes1(nibble < 10 ? nibble + 0x30 : nibble + 0x57);
     }
 }

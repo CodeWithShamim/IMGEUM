@@ -151,25 +151,30 @@ framer-motion · wagmi + viem · TanStack Query · Zustand · react-router · re
 
 - ✅ 정방향 해석: 고용주가 볼트 개설 폼에 `worker.up.id`를 입력하면 트랜잭션 구성 전에
   `UpIdResolver.resolve`로 주소를 확인합니다.
-- 🚧 역방향 해석. [`AddressChip`](./web/src/components/ui/AddressChip.tsx)은 이미 `upId` prop을
-  받지만 이를 넘겨주는 곳이 없어, 노동자가 가장 확인해야 할 고용주 주소를 포함해 모든 주소가
-  16진수로 표시됩니다. `UpIdResolver.reverse`를 감싸는 `useUpId(address)` 훅을 만들어
-  `VaultCard`와 증빙 페이지에 연결해야 합니다.
+- ✅ 역방향 해석([`useUpId`](./web/src/hooks/useUpId.ts)). 사람을 알아봐야 하는 자리 — 볼트 카드,
+  증빙 페이지, 지갑 버튼 — 에서는 주소가 `name.up.id`로 표시되고, 16진수 주소는 title과 복사에
+  그대로 남습니다. `reverse`는 만료된 이름에 대해 `""`를 돌려주므로 화면에 뜬 이름은 모두 유효한
+  신원이며, 조회는 캐시·중복 제거되어 볼트 여덟 개 목록도 서로 다른 주소 수만큼만 호출합니다.
 
 **공공재로서의 평판**
 
-- 🚧 공개 고용주 디렉터리(`/employers`). `employersPaged`와 `solvencyScore` 모두 ABI에 있으나
-  [`useEmployer.ts`](./web/src/hooks/useEmployer.ts)는 *연결된* 고용주의 점수만 읽습니다. 노동자가
-  입사 전에 고용주를 조회할 수 없다는 뜻이며, 임금 신뢰도 점수 구상의 나머지 절반이 여기에
-  해당합니다.
-- ⬜ 고용주별 공개 프로필: 점수, 예치 이력, 그리고 `ArrearsAttestor.recordsOfEmployer`(현재 앱에서
-  미사용)를 통한 체불 기록.
+- ✅ 공개 고용주 디렉터리([`/employers`](./web/src/pages/Employers.tsx)). `employersPaged`로
+  페이지 단위 조회하며 지갑 연결 없이 열람할 수 있습니다 — 입사를 고민하는 사람이야말로 지갑을
+  들고 있을 가능성이 가장 낮기 때문입니다. 신뢰도 순으로 정렬하되, 미평가 사업주는 0점 취급하지
+  않고 평가된 사업주 뒤에 배치합니다.
+- ✅ 고용주별 공개 프로필([`/employers/:address`](./web/src/pages/EmployerProfile.tsx)): 신원,
+  실시간 Dojang 상태, 점수, 예치 이력, 그리고 `recordsOfEmployer`로 읽은 모든 체불 기록이 각각의
+  증빙 페이지로 연결됩니다.
+- ✅ 사업주 콘솔의 체불 기록. 누군가 증명을 발행하는 순간 기록은 공개되고 영구히 남지만, 정작
+  해당 기업은 그 사실을 가장 늦게 알게 되는 구조였습니다. 미지급액을 정산할 수 있는 유일한
+  당사자에게 먼저 보이도록 했습니다.
 
 **자금**
 
-- 🚧 ERC-20 임금 볼트. `WageVault.openVault`는 이미 토큰 주소를 인자로 받고 컨트랙트는 SafeERC20 ·
-  전송수수료 토큰 안전성을 갖췄지만, 폼은 네이티브 토큰과 `parseEther`를 고정으로 사용합니다. 토큰
-  선택 UI, 소수점 자릿수를 고려한 파싱, `fund` 이전의 approve 단계가 필요합니다.
+- ✅ ERC-20 임금 볼트. 볼트 개설 폼은 `symbol`과 `decimals`에 응답하는 모든 ERC-20을 받고, 금액을
+  18자리 고정이 아닌 해당 토큰의 소수점 자릿수로 파싱하며, 예치는 토큰이 요구하는 approve 단계를
+  거칩니다. 두 트랜잭션을 그대로 두 단계로 보여주므로, 예치 서명을 거절해도 승인 한도는 남고 화면에는
+  명확한 예치 버튼이 남습니다.
 - ⬜ 원화 표시용 Upbit 오라클. 노동청 제출용 증빙 페이지를 포함해 앱의 모든 원화 금액이 현재
   [`web/src/lib/format.ts`](./web/src/lib/format.ts)의 `ETH_KRW_PLACEHOLDER` 상수에서 나옵니다.
   교체가 쉽도록 상수 하나로 격리해 두었습니다. 이 목록에서 정확성 리스크가 가장 큰 항목입니다 —

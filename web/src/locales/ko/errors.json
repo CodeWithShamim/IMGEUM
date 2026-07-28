@@ -10,6 +10,7 @@
   "notRegistered": "먼저 기업을 등록하세요.",
   "invalidWorker": "유효한 노동자 주소 또는 up.id를 입력하세요.",
   "invalidAmount": "유효한 금액을 입력하세요.",
+  "invalidToken": "이 주소에는 GIWA 상의 토큰 컨트랙트가 없습니다. 주소와 네트워크를 확인하세요.",
   "invalidPeriod": "주기 종료는 미래이며 시작 이후여야 합니다.",
   "invalidDeadline": "지급 기한은 주기 종료 이후, 30일 이내여야 합니다.",
   "notBreached": "이 볼트는 아직 체불 상태가 아닙니다.",

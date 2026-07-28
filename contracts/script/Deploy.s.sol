@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Script, console2} from "forge-std/Script.sol";
+import {VmSafe} from "forge-std/Vm.sol";
 
 import {EmployerRegistry} from "../src/EmployerRegistry.sol";
 import {WageVault} from "../src/WageVault.sol";
@@ -74,7 +75,16 @@ contract Deploy is Script {
 
         vm.stopBroadcast();
 
-        _writeArtifact(registry, vault, attestor, dojang, address(upIdResolver), upNameRegistry, attesterId, upbit);
+        // Only a real broadcast may touch the address book. A simulation computes addresses
+        // for a sender that never signs anything, so writing them here overwrote the live
+        // deployment record with four addresses that hold no code — and `sync-contracts.mjs`
+        // would then carry them straight into the frontend, pointing every read in the app at
+        // nothing. A dry run must be able to fail without costing anyone their address book.
+        if (vm.isContext(VmSafe.ForgeContext.ScriptBroadcast)) {
+            _writeArtifact(registry, vault, attestor, dojang, address(upIdResolver), upNameRegistry, attesterId, upbit);
+        } else {
+            console2.log("Simulation only - deployments/ left untouched (add --broadcast to write it)");
+        }
 
         console2.log("IMGEUM deployed to chain", block.chainid);
         console2.log("  EmployerRegistry", address(registry));

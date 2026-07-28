@@ -41,8 +41,14 @@
     "workerInvalid": "Enter a full up.id name (worker.up.id) or a 0x wallet address.",
     "wageLabel": "Total wage for the period",
     "tokenLabel": "Wage token",
-    "tokenNative": "Native ETH",
-    "tokenErc20": "KRW stablecoin",
+    "tokenNative": "ETH",
+    "tokenErc20": "ERC-20 token",
+    "tokenAddressLabel": "Token contract address",
+    "tokenAddressPlaceholder": "0x… (e.g. a KRW stablecoin)",
+    "tokenChecking": "Reading token…",
+    "tokenResolved": "{{symbol}} · {{decimals}} decimals",
+    "tokenUnknown": "No ERC-20 token answered at this address. Check the address and the network.",
+    "tokenInvalid": "Enter a 0x token contract address.",
     "startLabel": "Period start",
     "endLabel": "Period end",
     "deadlineLabel": "Payout deadline",
@@ -64,6 +70,15 @@
     "closed": "Settled",
     "workerEarning": "Worker is earning",
     "needsFunding": "Needs {{amount}} more",
-    "breached": "In arrears — {{amount}} unpaid"
+    "breached": "In arrears — {{amount}} unpaid",
+    "approveCta": "Approve {{symbol}}",
+    "approveHint": "Token vaults take two transactions: approve the vault to move this amount, then fund it.",
+    "approving": "Approving…",
+    "approved": "Approved {{amount}}"
+  },
+  "arrears": {
+    "heading": "Arrears recorded against you",
+    "body": "Public evidence records anyone has filed against your company. They are permanent and cannot be removed — settling the outstanding amount is what changes the picture.",
+    "none": "No arrears have been recorded against you."
   }
 }

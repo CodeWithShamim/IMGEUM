@@ -16,6 +16,7 @@
     "employerAddress": "Employer address",
     "employerUpId": "Employer up.id",
     "worker": "Worker (claimant)",
+    "workerUpId": "Worker up.id (today)",
     "workerAddress": "Worker address",
     "wageAmount": "Contracted wage",
     "funded": "Amount escrowed",
@@ -31,6 +32,7 @@
   "verification": {
     "atRecord": "Dojang-verified when the vault opened",
     "now": "Dojang-verified right now",
+    "upIdNow": "Employer up.id has since changed to",
     "yes": "Yes",
     "no": "No / revoked",
     "outstanding": "Still outstanding",

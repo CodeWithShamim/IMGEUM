@@ -26,6 +26,9 @@ export function useImgeum() {
     attestor: deployment
       ? ({address: deployment.arrearsAttestor, abi: abis.arrearsAttestor} as const)
       : undefined,
+    resolver: deployment
+      ? ({address: deployment.upIdResolver, abi: abis.upIdResolver} as const)
+      : undefined,
     dojang: deployment?.dojangVerifier,
     upIdResolver: deployment?.upIdResolver,
     upNameRegistry: deployment?.upNameRegistry,

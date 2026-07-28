@@ -35,6 +35,11 @@ const REVERT_KEYS: Record<string, string> = {
   NothingToWithdraw: 'errors:nothingToWithdraw',
   InvalidWorker: 'errors:invalidWorker',
   InvalidWageAmount: 'errors:invalidAmount',
+  // Raised by `openVault` for a wage token that is neither native ETH nor a contract. The form
+  // already blocks this by requiring `symbol`/`decimals` to answer, so reaching it means the
+  // address stopped being a contract between the check and the signature — or the wallet is
+  // pointed somewhere the token does not exist.
+  InvalidToken: 'errors:invalidToken',
   ZeroFundAmount: 'errors:invalidAmount',
   InvalidPeriod: 'errors:invalidPeriod',
   PeriodTooShort: 'errors:invalidPeriod',

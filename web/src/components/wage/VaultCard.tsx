@@ -2,20 +2,35 @@ import {useTranslation} from 'react-i18next';
 import {Link} from 'react-router-dom';
 import {useSecondsClock} from '../../hooks/useClock';
 import {useLang} from '../../hooks/useLang';
+import {useAmountFormat} from '../../hooks/useToken';
 import {
   earnedAt,
   fundingPace,
   shortfallAt,
   vaultState,
   withdrawableAt,
-  isNative,
   type Vault,
 } from '../../lib/vault';
-import {formatKRW, formatToken, formatDateShort} from '../../lib/format';
+import {formatDateShort} from '../../lib/format';
 import {Badge} from '../ui/Badge';
 import {AddressChip} from '../ui/AddressChip';
 
-const STATE_TONE = {streaming: 'nok', settled: 'muted', breached: 'vermil', pending: 'cheong'} as const;
+const STATE_TONE = {
+  streaming: 'nok',
+  ended: 'gold',
+  settled: 'muted',
+  breached: 'vermil',
+  pending: 'cheong',
+} as const;
+
+/** Status label per state. `settled` reads "closed" because that is what the contract calls it. */
+const STATE_LABEL = {
+  streaming: 'common:status.streaming',
+  ended: 'common:status.ended',
+  settled: 'common:status.closed',
+  breached: 'common:status.breached',
+  pending: 'common:status.pending',
+} as const;
 
 /**
  * A vault at a glance — used in both worker and employer lists. Shows the funding-vs-accrual
@@ -39,8 +54,8 @@ export function VaultCard({
   const shortfall = shortfallAt(vault, now);
   const state = vaultState(vault, now);
   const pace = fundingPace(vault, now);
-  const native = isNative(vault.token);
-  const fmt = (v: bigint) => (native ? formatKRW(v, lang) : `${formatToken(v)} ${t('common:units.krw')}`);
+  // Amounts render in the vault's own token and decimals — see `useAmountFormat`.
+  const fmt = useAmountFormat(vault.token);
 
   const fundedPct = vault.wageAmount > 0n ? Number((vault.funded * 100n) / vault.wageAmount) : 0;
   const earnedPct = vault.wageAmount > 0n ? Number((earned * 100n) / vault.wageAmount) : 0;
@@ -60,7 +75,7 @@ export function VaultCard({
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="font-display font-bold text-hanji">{t('common:labels.vaultId', {id: vault.id.toString()})}</span>
-          <Badge tone={STATE_TONE[state]}>{t(`common:status.${state === 'settled' ? 'closed' : state === 'breached' ? 'breached' : state === 'pending' ? 'pending' : 'streaming'}`)}</Badge>
+          <Badge tone={STATE_TONE[state]}>{t(STATE_LABEL[state])}</Badge>
         </div>
         <span className="text-xs text-hanji/50">
           {role === 'worker' ? t('common:labels.employer') : t('common:labels.worker')}:{' '}

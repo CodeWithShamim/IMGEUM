@@ -16,6 +16,7 @@
     "employerAddress": "사업주 주소",
     "employerUpId": "사업주 up.id",
     "worker": "노동자 (청구인)",
+    "workerUpId": "노동자 up.id (현재)",
     "workerAddress": "노동자 주소",
     "wageAmount": "약정 임금",
     "funded": "예치된 금액",
@@ -31,6 +32,7 @@
   "verification": {
     "atRecord": "볼트 개설 시점 Dojang 검증",
     "now": "현재 Dojang 검증 상태",
+    "upIdNow": "사업주 up.id가 다음으로 변경됨",
     "yes": "예",
     "no": "아니오 / 취소됨",
     "outstanding": "현재 미지급 잔액",

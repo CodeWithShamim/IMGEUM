@@ -6,6 +6,7 @@
     "home": "홈",
     "worker": "노동자",
     "employer": "사업주",
+    "directory": "사업주 찾기",
     "docs": "문서",
     "connect": "지갑 연결",
     "connecting": "연결 중…",
@@ -30,6 +31,7 @@
     "liveIdentity": "실제 신원 검증",
     "onTime": "정시 지급",
     "streaming": "스트리밍 중",
+    "ended": "기간 종료",
     "breached": "임금체불",
     "closed": "정산 완료",
     "pending": "대기 중",
@@ -71,6 +73,7 @@
     "solvencyScore": "임금 신뢰도 점수",
     "vault": "볼트",
     "vaultId": "볼트 #{{id}}",
+    "token": "토큰",
     "address": "주소",
     "upId": "up.id 이름",
     "attestation": "Dojang 증명",
@@ -96,5 +99,11 @@
     "wrongNetworkTitle": "잘못된 네트워크",
     "wrongNetworkDetail": "지갑이 체인 {{current}}에 연결되어 있습니다. IMGEUM은 {{chain}}({{chainId}})에서 서명합니다 — 전환하기 전까지 트랜잭션이 차단됩니다.",
     "switching": "전환 중…"
+  },
+  "error": {
+    "title": "문제가 발생했습니다",
+    "body": "페이지를 표시하는 중 오류가 발생했습니다. 새로고침하거나 처음으로 돌아가세요.",
+    "reload": "새로고침",
+    "home": "처음으로"
   }
 }

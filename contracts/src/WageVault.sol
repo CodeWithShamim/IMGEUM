@@ -70,6 +70,9 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
     error ZeroFundAmount();
     error NoDepositReceived();
     error ZeroAddress();
+    /// @dev A wage token that is neither native ETH nor a contract. Distinct from
+    ///      `ZeroAddress` so the employer is told which of the two they got wrong.
+    error InvalidToken(address token);
 
     /* -------------------------------------------------------------------------- */
     /*                                  CONSTANTS                                  */
@@ -235,7 +238,7 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
         if (payoutDeadline < periodEnd || payoutDeadline - periodEnd > MAX_SETTLEMENT_WINDOW) {
             revert InvalidDeadline();
         }
-        if (token != NATIVE && token.code.length == 0) revert ZeroAddress();
+        if (token != NATIVE && token.code.length == 0) revert InvalidToken(token);
 
         unchecked {
             vaultId = ++_vaultCount;
@@ -348,8 +351,13 @@ contract WageVault is IWageVault, Ownable2Step, ReentrancyGuard, Pausable {
         uint256 funded_ = v.funded;
 
         // Still short and not yet on the record -> must be attested first.
+        //
+        // Both branches are the same fact — wages are missing and no evidence exists yet — so
+        // both report it as `UnsettledShortfall`. This used to raise `PeriodNotEnded` when the
+        // deadline had not passed, which was simply untrue (the period HAS ended; that is why
+        // control reached here) and reached the employer's screen as "invalid period", telling
+        // them nothing about the actual blocker or the amount involved.
         if (funded_ < owed && !v.arrearsAttested) {
-            if (block.timestamp <= v.payoutDeadline) revert PeriodNotEnded(vaultId);
             revert UnsettledShortfall(vaultId, owed - funded_);
         }
 

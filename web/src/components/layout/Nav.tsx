@@ -9,8 +9,10 @@ import {shortAddress} from '../../lib/format';
 import {GIWA_LINKS} from '../../config/giwa';
 import {useNetwork} from '../../hooks/useNetwork';
 import {useToasts} from '../../hooks/useToasts';
+import {useUpId} from '../../hooks/useUpId';
 import {errorKey} from '../../hooks/useTx';
 import {BlockPulse} from '../motion/Loader';
+import type {Address} from '../../lib/vault';
 
 const linkClass = ({isActive}: {isActive: boolean}) =>
   `px-3 py-1.5 text-sm font-semibold uppercase tracking-wide rounded transition-colors ${
@@ -22,6 +24,9 @@ export function Nav() {
   const {address, isConnected} = useAccount();
   const {disconnect} = useDisconnect();
   const {isWrongNetwork, isSwitching, ensureNetwork} = useNetwork();
+  // The wallet's own up.id name, when it holds an active one. Seeing your own name here is
+  // what makes the identity layer feel like it belongs to you rather than to the app.
+  const {name} = useUpId(address as Address | undefined);
 
   return (
     <header className="sticky top-0 z-30 border-b-2 border-ink bg-ink/95 backdrop-blur lg:pl-10">
@@ -43,6 +48,10 @@ export function Nav() {
           <NavLink to="/employer" className={linkClass}>
             {t('common:nav.employer')}
           </NavLink>
+          {/* `end` so an employer's public profile doesn't light up the console tab. */}
+          <NavLink to="/employers" className={linkClass} end>
+            {t('common:nav.directory')}
+          </NavLink>
           <NavLink to="/docs" className={linkClass}>
             {t('common:nav.docs')}
           </NavLink>
@@ -61,9 +70,9 @@ export function Nav() {
             <button
               onClick={() => disconnect()}
               className="rounded border-2 border-ink bg-ink-2 px-3 py-2 font-mono text-xs text-hanji hover:border-vermil"
-              title={t('common:nav.disconnect')}
+              title={`${address ?? ''} — ${t('common:nav.disconnect')}`}
             >
-              {shortAddress(address)}
+              {name || shortAddress(address)}
             </button>
           ) : (
             <ConnectControl />

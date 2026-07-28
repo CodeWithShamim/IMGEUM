@@ -61,7 +61,7 @@ Names, `name.up.id`), and a public **pay-reliability score** employers can show 
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Why GIWA specifically**     | The product is only legible on a fast chain. GIWA's **1-second blocks** + **Flashblocks** (200ms preconfirmations) make a per-second wage stream real, not cosmetic. **Dojang Verified Address** gives employer identity a worker can trust; **up.id** gives human-readable addressing. None of this composes on a 12-second L1. |
 | **Originality**               | Not another DeFi primitive. A wage-arrears _evidence_ protocol targeting a specific, documented Korean social problem — with an evidence layer that delivers value even at zero employer adoption.                                                                                                                               |
-| **Feasibility**               | Contracts complete, 74 tests green (unit + fuzz + invariant, >95% line coverage), one-command testnet deploy, full bilingual frontend that builds with zero TypeScript errors.                                                                                                                                                   |
+| **Feasibility**               | Contracts complete, 125 tests green (unit + fuzz + invariant, >95% line coverage), one-command testnet deploy, full bilingual frontend that builds with zero TypeScript errors.                                                                                                                                                   |
 | **Market demand**             | ₩1.78T in annual arrears, 275,000+ workers/year (MOEL 2023). Labor offices, unions, and migrant-worker advocates are concrete first users.                                                                                                                                                                                       |
 | **GIWA Wallet embeddability** | The `/worker` view is designed as a wallet in-app tab: mobile-first, injected-connector-first, one primary action (withdraw), live stream front-and-center.                                                                                                                                                                      |
 
@@ -97,7 +97,7 @@ math + tested invariants, trust model, and threat model.
 ```bash
 cd contracts
 make install          # forge install
-make test             # 117 tests: unit + fuzz + invariant + live-chain fork
+make test             # 125 tests: unit + fuzz + invariant + live-chain fork
 make test-fork        # only the fork suite, against real GIWA Sepolia state
 make coverage         # >95% lines on the three core contracts
 
@@ -155,10 +155,10 @@ Playground](https://sepolia-playground.giwa.io/) ("Dojang 발급").
 
 | Contract | Address |
 | --- | --- |
-| `EmployerRegistry` | [`0xc7919F673f9886Eec01511ce66B7fBD23EA835E5`](https://sepolia-explorer.giwa.io/address/0xc7919F673f9886Eec01511ce66B7fBD23EA835E5) |
-| `WageVault` | [`0xf563E78ED45dDd8d324729aB37634d56800a839B`](https://sepolia-explorer.giwa.io/address/0xf563E78ED45dDd8d324729aB37634d56800a839B) |
-| `ArrearsAttestor` | [`0xc123985c09a0a9f3FC9077b5aB40B59dec9B4f4b`](https://sepolia-explorer.giwa.io/address/0xc123985c09a0a9f3FC9077b5aB40B59dec9B4f4b) |
-| `UpIdResolver` | [`0x9Bd42BfE3802B5419A75976E0cE0814ADF685404`](https://sepolia-explorer.giwa.io/address/0x9Bd42BfE3802B5419A75976E0cE0814ADF685404) |
+| `EmployerRegistry` | [`0xc72127Ef57692f8A6EaD2EeC94d16f110Cfb29D3`](https://sepolia-explorer.giwa.io/address/0xc72127Ef57692f8A6EaD2EeC94d16f110Cfb29D3) |
+| `WageVault` | [`0xd9709AbdbF0E34Ad7575f9C023E217dc448B832f`](https://sepolia-explorer.giwa.io/address/0xd9709AbdbF0E34Ad7575f9C023E217dc448B832f) |
+| `ArrearsAttestor` | [`0xda5ECC649d5A3c304fc0aC47Ee625BFBb4B9d05e`](https://sepolia-explorer.giwa.io/address/0xda5ECC649d5A3c304fc0aC47Ee625BFBb4B9d05e) |
+| `UpIdResolver` | [`0x5eC3638690dB7189d28EEa9eb6699F1Fb7509Fd3`](https://sepolia-explorer.giwa.io/address/0x5eC3638690dB7189d28EEa9eb6699F1Fb7509Fd3) |
 
 Read against GIWA's own contracts, not ours:
 
@@ -183,7 +183,7 @@ Each has a working exploit preserved as a regression test in
 | 3 | `setRecorder(attestor, false)` | One owner transaction permanently disabled arrears attestation, routing around the write-once `setAttestor` guarantee | Recorder grants are irrevocable; `attestArrears` also records history best-effort |
 | 4 | `_safeMint` + pausable `fund` | Smart-account workers could **never** receive evidence; and a pause manufactured arrears against employers who were paying on time | `_mint` (the token is soulbound anyway); `fund` is no longer pausable |
 
-`make test` runs 117 tests — unit, fuzz, invariant, and a fork suite executed against live
+`make test` runs 125 tests — unit, fuzz, invariant, and a fork suite executed against live
 GIWA Sepolia state.
 
 ---
@@ -224,25 +224,32 @@ Status marks are literal. **✅** is in `main` and exercised by a test or a runn
 
 - ✅ Forward resolution: an employer types `worker.up.id` into the open-vault form and it
   resolves through `UpIdResolver.resolve` before the transaction is built.
-- 🚧 Reverse resolution. [`AddressChip`](./web/src/components/ui/AddressChip.tsx) already accepts
-  a `upId` prop and nothing in the app passes it, so every address — including the employer a
-  worker most needs to recognise — renders as hex. Needs a `useUpId(address)` hook over
-  `UpIdResolver.reverse`, wired into `VaultCard` and the evidence page.
+- ✅ Reverse resolution ([`useUpId`](./web/src/hooks/useUpId.ts)). Addresses render as their
+  `name.up.id` wherever a person is meant to be recognised — vault cards, evidence pages, the
+  wallet button — with the hex still in the title and on copy. `reverse` returns `""` for a name
+  that has lapsed, so anything displayed is an active identity; reads are cached and deduped, so
+  a list of eight vaults costs one call per distinct address.
 
 **Reputation as a public good**
 
-- 🚧 Public employer directory (`/employers`). `employersPaged` and `solvencyScore` are both in
-  the ABI, but [`useEmployer.ts`](./web/src/hooks/useEmployer.ts) only ever reads the *connected*
-  employer's score. A worker cannot look an employer up before taking the job — which is the
-  half of the pay-reliability pitch that does not exist yet.
-- ⬜ Per-employer public profile: score, funded-vault history, and arrears records via
-  `ArrearsAttestor.recordsOfEmployer` (currently unused by the app).
+- ✅ Public employer directory ([`/employers`](./web/src/pages/Employers.tsx)), paged through
+  `employersPaged` and readable with no wallet connected — the person deciding whether to take a
+  job is the least likely to arrive holding one. Sorted by reliability, with unrated employers
+  ordered after rated ones rather than scored zero.
+- ✅ Per-employer public profile ([`/employers/:address`](./web/src/pages/EmployerProfile.tsx)):
+  identity, live Dojang status, score, funding record, and every arrears record filed against
+  them via `recordsOfEmployer`, each linking to its evidence page.
+- ✅ Employer-side arrears history, in the employer's own console. Records are public and
+  permanent from the moment anyone attests them, and the company was previously the last party
+  able to see them — while being the only party who can settle the outstanding amount.
 
 **Money**
 
-- 🚧 ERC-20 wage vaults. `WageVault.openVault` already takes a token address and the contract is
-  SafeERC20- and fee-on-transfer-safe; the form hardcodes the native token and `parseEther`.
-  Needs a token selector, decimals-aware parsing, and an allowance step ahead of `fund`.
+- ✅ ERC-20 wage vaults. The open-vault form accepts any ERC-20 that answers `symbol` and
+  `decimals`, parses amounts at that token's decimals (never a hardcoded 18), and funding routes
+  through the approve step tokens require — kept as two visible transactions, so a declined
+  funding signature leaves a standing allowance and an obvious Fund button rather than a flow
+  that looks broken.
 - ⬜ Upbit Oracle for KRW. Every won figure in the app — including on the labour-office evidence
   page — currently derives from `ETH_KRW_PLACEHOLDER` in
   [`web/src/lib/format.ts`](./web/src/lib/format.ts). It is isolated to one constant on purpose.
@@ -278,7 +285,7 @@ Status marks are literal. **✅** is in `main` and exercised by a test or a runn
 
 ## Definition of done (spec §9) — status
 
-- ✅ Contracts compile; 74 tests pass (unit + fuzz + invariant); >95% line coverage on core.
+- ✅ Contracts compile; 125 tests pass (unit + fuzz + invariant); >95% line coverage on core.
 - ✅ One-command testnet deploy + Blockscout verification wired per GIWA docs.
 - ✅ Full demo path implemented: register → open vault → fund → stream → withdraw → arrears → evidence.
 - ✅ Zero TypeScript errors; landing chunk ~2 KB gzip (Lighthouse-friendly, code-split).

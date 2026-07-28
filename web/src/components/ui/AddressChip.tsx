@@ -2,12 +2,19 @@ import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {explorerAddress} from '../../config/giwa';
 import {shortAddress} from '../../lib/format';
+import {useUpId} from '../../hooks/useUpId';
 import type {Address} from '../../lib/vault';
 
 interface Props {
   address: Address;
-  /** Optional resolved up.id name; shown in place of the hex when present. */
+  /** Pre-resolved name (a snapshot, a batch lookup). Skips this chip's own resolution. */
   upId?: string;
+  /**
+   * Look the name up on-chain when none was passed. On by default: an address a person is
+   * meant to recognise should read as a name wherever it appears. Turn it off for addresses
+   * that are not people — deployed contracts have no up.id name and never will.
+   */
+  resolve?: boolean;
   verified?: boolean;
   mono?: boolean;
   link?: boolean;
@@ -16,11 +23,17 @@ interface Props {
 /**
  * Renders an address as its up.id name when available, otherwise a shortened hex, always with
  * copy + explorer affordances. Workers send `name.up.id`, never a raw address (spec §1).
+ *
+ * The hex is never thrown away: it stays in the title attribute, and copy still yields the
+ * address, because that is what a person pastes into a wallet or an explorer. The name is a
+ * label on top of the address, not a replacement for it.
  */
-export function AddressChip({address, upId, verified, mono = true, link = true}: Props) {
+export function AddressChip({address, upId, resolve = true, verified, mono = true, link = true}: Props) {
   const {t} = useTranslation();
   const [copied, setCopied] = useState(false);
-  const label = upId && upId.length > 0 ? upId : shortAddress(address);
+  const lookup = useUpId(resolve && !upId ? address : undefined);
+  const name = upId || lookup.name;
+  const label = name && name.length > 0 ? name : shortAddress(address);
 
   const copy = async () => {
     await navigator.clipboard.writeText(address);

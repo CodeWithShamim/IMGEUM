@@ -6,6 +6,7 @@
     "home": "Home",
     "worker": "Worker",
     "employer": "Employer",
+    "directory": "Directory",
     "docs": "Docs",
     "connect": "Connect wallet",
     "connecting": "Connecting…",
@@ -30,6 +31,7 @@
     "liveIdentity": "LIVE IDENTITY",
     "onTime": "Paid on time",
     "streaming": "Streaming",
+    "ended": "Period ended",
     "breached": "In arrears",
     "closed": "Settled",
     "pending": "Pending",
@@ -71,6 +73,7 @@
     "solvencyScore": "Pay-reliability score",
     "vault": "Vault",
     "vaultId": "Vault #{{id}}",
+    "token": "Token",
     "address": "Address",
     "upId": "up.id name",
     "attestation": "Dojang attestation",
@@ -96,5 +99,11 @@
     "wrongNetworkTitle": "Wrong network",
     "wrongNetworkDetail": "Your wallet is on chain {{current}}. IMGEUM signs on {{chain}} ({{chainId}}) — transactions are blocked until you switch.",
     "switching": "Switching…"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "body": "This page could not be displayed. Try reloading, or go back to the start.",
+    "reload": "Reload",
+    "home": "Home"
   }
 }

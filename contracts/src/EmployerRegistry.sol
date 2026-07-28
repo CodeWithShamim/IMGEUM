@@ -302,8 +302,12 @@ contract EmployerRegistry is IEmployerRegistry, Ownable2Step {
     function employersPaged(uint256 offset, uint256 limit) external view returns (address[] memory page) {
         uint256 total = _employerList.length;
         if (offset >= total) return new address[](0);
-        uint256 end = offset + limit;
-        if (end > total) end = total;
+        // Clamped by comparing against the REMAINING count rather than computing `offset +
+        // limit` first: the sum overflows for a large `limit` (a caller passing
+        // `type(uint256).max` to mean "all of them" is the obvious way to hit it) and would
+        // panic-revert the directory read instead of returning the page.
+        uint256 remaining = total - offset;
+        uint256 end = limit >= remaining ? total : offset + limit;
         page = new address[](end - offset);
         for (uint256 i = offset; i < end; ++i) {
             page[i - offset] = _employerList[i];

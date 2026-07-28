@@ -41,8 +41,14 @@
     "workerInvalid": "전체 up.id 이름(worker.up.id) 또는 0x 지갑 주소를 입력하세요.",
     "wageLabel": "해당 주기 총 임금",
     "tokenLabel": "임금 토큰",
-    "tokenNative": "네이티브 ETH",
-    "tokenErc20": "원화 스테이블코인",
+    "tokenNative": "ETH",
+    "tokenErc20": "ERC-20 토큰",
+    "tokenAddressLabel": "토큰 컨트랙트 주소",
+    "tokenAddressPlaceholder": "0x… (예: 원화 스테이블코인)",
+    "tokenChecking": "토큰 정보를 읽는 중…",
+    "tokenResolved": "{{symbol}} · 소수점 {{decimals}}자리",
+    "tokenUnknown": "이 주소에서 응답하는 ERC-20 토큰이 없습니다. 주소와 네트워크를 확인하세요.",
+    "tokenInvalid": "0x로 시작하는 토큰 컨트랙트 주소를 입력하세요.",
     "startLabel": "주기 시작",
     "endLabel": "주기 종료",
     "deadlineLabel": "지급 기한",
@@ -64,6 +70,15 @@
     "closed": "정산 완료",
     "workerEarning": "노동자가 임금을 적립 중",
     "needsFunding": "{{amount}} 추가 필요",
-    "breached": "체불 — {{amount}} 미지급"
+    "breached": "체불 — {{amount}} 미지급",
+    "approveCta": "{{symbol}} 승인",
+    "approveHint": "토큰 볼트는 트랜잭션이 두 번 필요합니다. 볼트가 이 금액을 인출하도록 승인한 뒤 예치하세요.",
+    "approving": "승인 중…",
+    "approved": "{{amount}} 승인 완료"
+  },
+  "arrears": {
+    "heading": "우리 회사에 기록된 체불",
+    "body": "누군가 우리 회사를 상대로 발행한 공개 증빙 기록입니다. 영구적이며 삭제할 수 없고, 미지급액을 정산하는 것만이 상황을 바꿉니다.",
+    "none": "우리 회사에 기록된 체불이 없습니다."
   }
 }

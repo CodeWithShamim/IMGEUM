@@ -9,6 +9,8 @@ import {Loader} from './components/motion/Loader';
 const Landing = lazy(() => import('./pages/Landing'));
 const Worker = lazy(() => import('./pages/Worker'));
 const Employer = lazy(() => import('./pages/Employer'));
+const Employers = lazy(() => import('./pages/Employers'));
+const EmployerProfile = lazy(() => import('./pages/EmployerProfile'));
 const Evidence = lazy(() => import('./pages/Evidence'));
 const Docs = lazy(() => import('./pages/Docs'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -31,6 +33,8 @@ export function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/worker" element={<Worker />} />
             <Route path="/employer" element={<Employer />} />
+            <Route path="/employers" element={<Employers />} />
+            <Route path="/employers/:address" element={<EmployerProfile />} />
             <Route path="/evidence/:id" element={<Evidence />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="*" element={<NotFound />} />

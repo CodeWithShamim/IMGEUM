@@ -11,9 +11,11 @@ import {Button} from '../components/ui/Button';
 import {Loader} from '../components/motion/Loader';
 import {EASE} from '../components/motion/ease';
 import {usePrefersReducedMotion} from '../hooks/usePrefersReducedMotion';
-import {formatKRW, formatToken, formatDate, shortAddress} from '../lib/format';
+import {useAmountFormat} from '../hooks/useToken';
+import {useUpId} from '../hooks/useUpId';
+import {formatDate, shortAddress} from '../lib/format';
 import {explorerAddress, DOJANG, GIWA_LINKS, ACTIVE_CHAIN} from '../config/giwa';
-import {isNative, type Address} from '../lib/vault';
+import type {Address} from '../lib/vault';
 
 interface ArrearsRecord {
   vaultId: bigint;
@@ -32,6 +34,17 @@ interface ArrearsRecord {
   employerUpId: string;
   employerName: string;
   attester: Address;
+}
+
+/**
+ * A URL path segment as a non-negative id, or undefined if it is not one.
+ *
+ * `BigInt` is unusually eager: it throws on "abc" but happily accepts " 12 ", "0x10" and "-3".
+ * Only plain decimal digits are an id here, so anything else resolves to the not-found card.
+ */
+function parseId(raw?: string): bigint | undefined {
+  if (!raw || !/^\d+$/.test(raw)) return undefined;
+  return BigInt(raw);
 }
 
 /**
@@ -54,8 +67,17 @@ export default function Evidence() {
   }, []);
 
   // Support both /evidence/:recordId and /evidence/vault-:vaultId.
-  const isVaultRef = id?.startsWith('vault-');
-  const vaultId = isVaultRef ? BigInt(id!.replace('vault-', '')) : undefined;
+  //
+  // Both forms parse defensively. This id comes straight from the URL bar, and `BigInt('abc')`
+  // throws — thrown from a render, with no error boundary above it, that blanked the entire
+  // app rather than showing the not-found card three lines further down. Evidence links get
+  // pasted into messages, printed, and retyped off paper by people at a labour office; a
+  // mistyped one has to land on "record not found", not on a white screen.
+  const isVaultRef = id?.startsWith('vault-') ?? false;
+  const vaultId = useMemo(
+    () => (isVaultRef ? parseId(id!.slice('vault-'.length)) : undefined),
+    [id, isVaultRef],
+  );
 
   const recordOfVault = useReadContract({
     address: attestor?.address as Address | undefined,
@@ -66,14 +88,10 @@ export default function Evidence() {
     query: {enabled: isDeployed && isVaultRef && vaultId !== undefined},
   });
 
-  const recordId = useMemo(() => {
-    if (isVaultRef) return (recordOfVault.data as bigint | undefined) ?? undefined;
-    try {
-      return id ? BigInt(id) : undefined;
-    } catch {
-      return undefined;
-    }
-  }, [id, isVaultRef, recordOfVault.data]);
+  const recordId = useMemo(
+    () => (isVaultRef ? ((recordOfVault.data as bigint | undefined) ?? undefined) : parseId(id)),
+    [id, isVaultRef, recordOfVault.data],
+  );
 
   const verify = useReadContract({
     address: attestor?.address as Address | undefined,
@@ -110,8 +128,49 @@ export default function Evidence() {
   }
 
   const [rec, verifiedNow, , outstanding] = data;
-  const native = isNative(rec.token);
-  const fmt = (v: bigint) => (native ? formatKRW(v, lang) : `${formatToken(v)} KRW`);
+
+  return (
+    <EvidenceDocument
+      rec={rec}
+      recordId={recordId}
+      verifiedNow={verifiedNow}
+      outstanding={outstanding}
+      stamped={stamped}
+      reduced={reduced}
+    />
+  );
+}
+
+/**
+ * The record itself. Split out of the page because it resolves names, and hooks cannot live
+ * behind the loading and not-found returns above.
+ */
+function EvidenceDocument({
+  rec,
+  recordId,
+  verifiedNow,
+  outstanding,
+  stamped,
+  reduced,
+}: {
+  rec: ArrearsRecord;
+  recordId: bigint;
+  verifiedNow: boolean;
+  outstanding: bigint;
+  stamped: boolean;
+  reduced: boolean;
+}) {
+  const {t} = useTranslation();
+  const {lang} = useLang();
+  const fmt = useAmountFormat(rec.token);
+
+  // Names as they stand TODAY, which is a different claim from the record's frozen fields and
+  // is labelled as such. The worker's name is not snapshotted at all — the contract has no
+  // field for it — so a live lookup is the only way this page can name the claimant rather
+  // than only their address.
+  const {name: employerNameNow} = useUpId(rec.employer);
+  const {name: workerNameNow} = useUpId(rec.worker);
+  const employerNameChanged = !!employerNameNow && !!rec.employerUpId && employerNameNow !== rec.employerUpId;
 
   return (
     <PaperShell>
@@ -156,6 +215,7 @@ export default function Evidence() {
           <Row label={t('evidence:fields.employer')} value={rec.employerName} />
           {rec.employerUpId && <Row label={t('evidence:fields.employerUpId')} value={rec.employerUpId} mono />}
           <Row label={t('evidence:fields.employerAddress')} value={shortAddress(rec.employer, 6)} mono link={explorerAddress(rec.employer)} />
+          {workerNameNow && <Row label={t('evidence:fields.workerUpId')} value={workerNameNow} mono />}
           <Row label={t('evidence:fields.workerAddress')} value={shortAddress(rec.worker, 6)} mono link={explorerAddress(rec.worker)} />
         </Section>
 
@@ -185,6 +245,9 @@ export default function Evidence() {
             value={verifiedNow ? t('evidence:verification.yes') : t('evidence:verification.no')}
             tone={verifiedNow ? 'nok' : 'vermil'}
           />
+          {employerNameChanged && (
+            <Row label={t('evidence:verification.upIdNow')} value={employerNameNow} mono tone="vermil" />
+          )}
           <Row label={t('evidence:fields.dojangUid')} value={shortAddress(rec.employerDojangUid, 8)} mono />
         </Section>
       </div>

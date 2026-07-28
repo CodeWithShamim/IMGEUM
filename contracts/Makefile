@@ -41,6 +41,11 @@ slither: ## Static analysis (requires slither installed)
 clean: ## Remove build artifacts
 	forge clean
 
+# Which `cast wallet import` keystore account signs a deploy. Overridable, because the account
+# name is a property of the machine doing the deploying, not of this repo:
+#   make deploy-testnet DEPLOY_ACCOUNT=myaccount
+DEPLOY_ACCOUNT ?= deployer
+
 verify-env: ## Fail early if required deploy env vars are missing
 	@test -n "$(GIWA_SEPOLIA_RPC_URL)" || (echo "GIWA_SEPOLIA_RPC_URL unset — copy .env.example to .env" && exit 1)
 	@echo "env OK: RPC=$(GIWA_SEPOLIA_RPC_URL)"
@@ -50,7 +55,7 @@ verify-env: ## Fail early if required deploy env vars are missing
 deploy-testnet: verify-env ## Deploy to GIWA Sepolia against the live Dojang + up.id
 	ATTESTER_MODE=faucet forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(GIWA_SEPOLIA_RPC_URL) \
-		--account deployer \
+		--account $(DEPLOY_ACCOUNT) \
 		--broadcast \
 		--verify \
 		--verifier blockscout \
@@ -60,13 +65,13 @@ deploy-testnet: verify-env ## Deploy to GIWA Sepolia against the live Dojang + u
 deploy-testnet-dry: verify-env ## Simulate the GIWA Sepolia deploy without broadcasting
 	ATTESTER_MODE=faucet forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(GIWA_SEPOLIA_RPC_URL) \
-		--sender $(DEPLOYER_ADDRESS)
+		$(if $(DEPLOYER_ADDRESS),--sender $(DEPLOYER_ADDRESS),)
 
 # Mainnet-shaped deploy: gated on the UPBIT KOREA attester (real KYC'd Korean entities).
 deploy-mainnet: verify-env ## Deploy gated on the Upbit Korea attester
 	ATTESTER_MODE=upbit forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(GIWA_SEPOLIA_RPC_URL) \
-		--account deployer \
+		--account $(DEPLOY_ACCOUNT) \
 		--broadcast \
 		--verify \
 		--verifier blockscout \

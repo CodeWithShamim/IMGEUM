@@ -1,7 +1,7 @@
 import {useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useAccount, useBlock, useReadContract} from 'wagmi';
-import {isAddress, parseEther} from 'viem';
+import {isAddress, parseUnits} from 'viem';
 import type {Abi} from 'viem';
 import {Layout} from '../components/layout/Layout';
 import {TileWipe} from '../components/motion/TileWipe';
@@ -11,14 +11,18 @@ import {Badge} from '../components/ui/Badge';
 import {SolvencyMeter} from '../components/ui/SolvencyMeter';
 import {Stat} from '../components/ui/Stat';
 import {VaultCard} from '../components/wage/VaultCard';
+import {ArrearsList} from '../components/wage/ArrearsList';
 import {useImgeum} from '../hooks/useImgeum';
 import {useEmployer} from '../hooks/useEmployer';
+import {useEmployerArrearsIds, useArrearsRecords} from '../hooks/useArrears';
 import {useEmployerVaultIds, useVaults} from '../hooks/useVaults';
 import {useTx} from '../hooks/useTx';
 import {useSecondsClock} from '../hooks/useClock';
-import {vaultState, isNative, type Vault, type Address, NATIVE_TOKEN} from '../lib/vault';
-import {formatKRW, shortAddress} from '../lib/format';
-import {useLang} from '../hooks/useLang';
+import {useToken, useAllowance, useAmountFormat} from '../hooks/useToken';
+import {useUpId} from '../hooks/useUpId';
+import {canClose, isNative, type Vault, type Address, NATIVE_TOKEN} from '../lib/vault';
+import {shortAddress} from '../lib/format';
+import {ERC20_ABI} from '../config/erc20';
 import {GIWA_LINKS, ACTIVE_CHAIN} from '../config/giwa';
 
 export default function Employer() {
@@ -57,7 +61,7 @@ export default function Employer() {
 function RegisterPanel({onDone}: {onDone: () => void}) {
   const {t} = useTranslation();
   const {address} = useAccount();
-  const {registry, upIdResolver} = useImgeum();
+  const {registry} = useImgeum();
   const {send, pending} = useTx();
   const [upId, setUpId] = useState('');
   const [name, setName] = useState('');
@@ -78,15 +82,7 @@ function RegisterPanel({onDone}: {onDone: () => void}) {
   // The wallet's real up.id name, reverse-resolved from the live UPNameRegistry. Offered as a
   // prefill rather than forced into the field, since the on-chain `upId` is a display label
   // the employer may legitimately want to set differently.
-  const {data: ownedUpId} = useReadContract({
-    address: upIdResolver as Address,
-    abi: UP_ID_RESOLVER_ABI,
-    chainId: ACTIVE_CHAIN.id,
-    functionName: 'reverse',
-    args: address ? [address] : undefined,
-    query: {enabled: !!upIdResolver && !!address},
-  });
-  const detectedUpId = (ownedUpId as string | undefined) || '';
+  const {name: detectedUpId} = useUpId(address as Address | undefined);
 
   const recheck = () => void verified.refetch();
 
@@ -220,18 +216,65 @@ function RegisteredConsole({employer, emp}: {employer: Address; emp: ReturnType<
             ))}
           </div>
         )}
+
+        <ArrearsAgainstYou employer={employer} />
       </div>
     </div>
   );
 }
 
+/**
+ * What has been filed against this employer, in their own console.
+ *
+ * Arrears records are public and permanent the moment anyone attests them, and the employer is
+ * the last party to find out — the worker files, the labour office reads, and the company sees
+ * nothing. Surfacing it here is not about softening the record: it is the only way an employer
+ * can settle the outstanding amount, or discover a vault they thought was funded is not.
+ */
+function ArrearsAgainstYou({employer}: {employer: Address}) {
+  const {t} = useTranslation();
+  const {data: ids} = useEmployerArrearsIds(employer);
+  const idList = useMemo(() => (ids as bigint[] | undefined) ?? [], [ids]);
+  const {records} = useArrearsRecords(idList);
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-1 font-display text-sm font-bold uppercase tracking-[0.2em] text-vermil">
+        {t('employer:arrears.heading')}
+      </h2>
+      <p className="mb-3 text-xs text-hanji/50">{t('employer:arrears.body')}</p>
+      {records.length === 0 ? (
+        <div className="rounded border-2 border-dashed border-nok/30 p-6 text-center text-sm text-nok/80">
+          {t('employer:arrears.none')}
+        </div>
+      ) : (
+        <ArrearsList records={records} show="worker" />
+      )}
+    </section>
+  );
+}
+
 function OpenVaultForm({onDone}: {onDone: () => void}) {
   const {t} = useTranslation();
-  const {vault, upIdResolver} = useImgeum();
+  const {vault, resolver} = useImgeum();
   const {send, pending} = useTx();
   const [worker, setWorker] = useState('');
   const [wage, setWage] = useState('');
   const [days, setDays] = useState('30');
+  const [tokenMode, setTokenMode] = useState<'native' | 'erc20'>('native');
+  const [tokenInput, setTokenInput] = useState('');
+
+  // Wage token. The contract has always accepted any ERC-20 (SafeERC20, fee-on-transfer safe);
+  // this is the form finally offering it. There is no curated token list because IMGEUM does
+  // not get to decide what a wage is denominated in — the employer names the token, and it is
+  // accepted only if it answers `symbol` and `decimals` like a token should.
+  const typedToken = tokenInput.trim();
+  const tokenAddress = isAddress(typedToken) ? (typedToken as Address) : undefined;
+  const token = useToken(tokenMode === 'native' ? undefined : tokenAddress);
+  const tokenOk = tokenMode === 'native' || (!!tokenAddress && token.known);
+  const tokenUnknown = tokenMode === 'erc20' && !!tokenAddress && !token.known && !token.isLoading;
+  const tokenMalformed = tokenMode === 'erc20' && !!typedToken && !tokenAddress;
+  const symbol = tokenMode === 'native' ? t('common:units.eth') : token.symbol || t('common:labels.token');
 
   // The field accepts either representation, because that is what it advertises. Workers hand
   // out `name.up.id`; only the contract insists on an address. Resolution happens here rather
@@ -241,12 +284,12 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   const looksLikeName = !typedAddress && entry.endsWith(UP_ID_SUFFIX) && entry.length > UP_ID_SUFFIX.length;
 
   const resolution = useReadContract({
-    address: upIdResolver as Address,
-    abi: UP_ID_RESOLVER_ABI,
+    address: resolver?.address as Address,
+    abi: resolver?.abi as Abi,
     chainId: ACTIVE_CHAIN.id,
     functionName: 'resolve',
     args: looksLikeName ? [entry] : undefined,
-    query: {enabled: !!upIdResolver && looksLikeName},
+    query: {enabled: !!resolver && looksLikeName},
   });
 
   // `resolve` answers address(0) for anything it will not vouch for — unissued, lapsed, or a
@@ -273,8 +316,23 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   // with no explanation the employer could act on.
   const {data: block} = useBlock({chainId: ACTIVE_CHAIN.id, query: {refetchInterval: 30_000}});
 
+  // Guarded exactly like the funding field: `parseUnits` throws on anything that is not a plain
+  // decimal string, and `Number(wage) > 0` waves through forms it rejects — "1e5" being the
+  // easy one. Left unguarded the throw escaped an onClick handler as an unhandled rejection, so
+  // the employer pressed the button and nothing whatsoever happened: no toast, no error, no tx.
+  const parsedWage = useMemo(() => {
+    if (!wage) return 0n;
+    try {
+      // Parsed at the token's own decimals, never a hardcoded 18. Getting this wrong on a
+      // six-decimal stablecoin misstates the wage by twelve orders of magnitude.
+      return parseUnits(wage, token.decimals);
+    } catch {
+      return 0n;
+    }
+  }, [wage, token.decimals]);
+
   const open = async () => {
-    if (!vault || !workerAddress) return;
+    if (!vault || !workerAddress || !tokenOk || parsedWage === 0n) return;
     const now = block?.timestamp ?? BigInt(Math.floor(Date.now() / 1000));
 
     // Start the period a couple of minutes out rather than exactly now. `MIN_PERIOD` is
@@ -290,7 +348,14 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
         address: vault.address as Address,
         abi: vault.abi,
         functionName: 'openVault',
-        args: [workerAddress, parseEther(wage || '0'), start, end, deadline, NATIVE_TOKEN],
+        args: [
+          workerAddress,
+          parsedWage,
+          start,
+          end,
+          deadline,
+          tokenMode === 'native' ? NATIVE_TOKEN : (tokenAddress as Address),
+        ],
       },
       t('employer:open.opening'),
       t('employer:open.success'),
@@ -303,7 +368,7 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   };
 
   const periodOk = Number(days) >= minDays;
-  const valid = !!workerAddress && Number(wage) > 0 && periodOk;
+  const valid = !!workerAddress && parsedWage > 0n && periodOk && tokenOk;
 
   return (
     <div className="rounded border-2 border-ink bg-ink-2 p-4">
@@ -322,7 +387,41 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
         {!!entry && !typedAddress && !looksLikeName && (
           <p className="text-xs text-vermil">{t('employer:open.workerInvalid')}</p>
         )}
-        <Field label={`${t('employer:open.wageLabel')} (ETH)`} value={wage} onChange={setWage} placeholder="1.5" mono />
+
+        <div>
+          <span className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-hanji/50">
+            {t('employer:open.tokenLabel')}
+          </span>
+          <div className="mt-1 flex gap-2">
+            <TokenModeButton active={tokenMode === 'native'} onClick={() => setTokenMode('native')}>
+              {t('employer:open.tokenNative')}
+            </TokenModeButton>
+            <TokenModeButton active={tokenMode === 'erc20'} onClick={() => setTokenMode('erc20')}>
+              {t('employer:open.tokenErc20')}
+            </TokenModeButton>
+          </div>
+        </div>
+        {tokenMode === 'erc20' && (
+          <>
+            <Field
+              label={t('employer:open.tokenAddressLabel')}
+              value={tokenInput}
+              onChange={setTokenInput}
+              placeholder={t('employer:open.tokenAddressPlaceholder')}
+              mono
+            />
+            {token.isLoading && <p className="text-xs text-hanji/50">{t('employer:open.tokenChecking')}</p>}
+            {token.known && (
+              <p className="font-mono text-xs text-nok">
+                {t('employer:open.tokenResolved', {symbol: token.symbol, decimals: token.decimals})}
+              </p>
+            )}
+            {tokenUnknown && <p className="text-xs text-vermil">{t('employer:open.tokenUnknown')}</p>}
+            {tokenMalformed && <p className="text-xs text-vermil">{t('employer:open.tokenInvalid')}</p>}
+          </>
+        )}
+
+        <Field label={`${t('employer:open.wageLabel')} (${symbol})`} value={wage} onChange={setWage} placeholder="1.5" mono />
         <Field label={`${t('employer:open.endLabel')} (${t('common:units.perMonth')})`} value={days} onChange={setDays} placeholder="30" mono />
         {!periodOk && <p className="text-xs text-vermil">{t('employer:open.minPeriod', {count: minDays})}</p>}
         <Button variant="cheong" full disabled={!valid} loading={pending} onClick={open}>
@@ -335,30 +434,75 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
 
 function EmployerVaultRow({vault, onDone}: {vault: Vault; onDone: () => void}) {
   const {t} = useTranslation();
-  const {lang} = useLang();
+  const {address} = useAccount();
   const {vault: vaultContract} = useImgeum();
   const {send, pending} = useTx();
   const now = useSecondsClock();
   const [fundAmt, setFundAmt] = useState('');
-  const state = vaultState(vault, now);
   const native = isNative(vault.token);
+  const token = useToken(vault.token);
+  const fmt = useAmountFormat(vault.token);
+
+  const parsed = useMemo(() => {
+    if (!fundAmt) return 0n;
+    try {
+      return parseUnits(fundAmt, token.decimals);
+    } catch {
+      return 0n;
+    }
+  }, [fundAmt, token.decimals]);
+
+  // What the vault is currently allowed to pull. Native vaults are funded with `msg.value` and
+  // have nothing to approve, so this stays disabled for them.
+  const {allowance, refetch: refetchAllowance} = useAllowance(
+    vault.token,
+    address as Address | undefined,
+    vaultContract?.address as Address | undefined,
+  );
+  const needsApproval = !native && parsed > 0n && allowance < parsed;
+
+  // Nothing may be signed for a token vault until its decimals are actually known. `parseUnits`
+  // has to fall back to something while the metadata read is in flight, and funding "100" at a
+  // fallback of 18 decimals when the token uses 6 would deposit a million million times the
+  // intended amount — the kind of mistake that is only survivable because the token would
+  // reject it for balance.
+  const amountReady = parsed > 0n && (native || token.known);
+
+  // Two transactions, kept as two visible steps rather than one button that silently fires
+  // both. An employer who approves and then declines the funding signature should end up with
+  // an allowance and an obvious "Fund" button, not a flow that looks like it failed.
+  const approve = async () => {
+    if (!vaultContract || !amountReady) return;
+    const ok = await send(
+      {
+        address: vault.token,
+        abi: ERC20_ABI,
+        functionName: 'approve',
+        args: [vaultContract.address as Address, parsed],
+      },
+      t('employer:vaults.approving'),
+      t('employer:vaults.approved', {amount: fmt(parsed)}),
+    );
+    if (ok) refetchAllowance();
+  };
 
   const fund = async () => {
-    if (!vaultContract || !fundAmt) return;
-    const value = parseEther(fundAmt);
+    if (!vaultContract || !amountReady) return;
     const ok = await send(
       {
         address: vaultContract.address as Address,
         abi: vaultContract.abi,
         functionName: 'fund',
-        args: [vault.id, value],
-        value: native ? value : 0n,
+        args: [vault.id, parsed],
+        // A token vault must carry no ETH: `fund` reverts with UnexpectedNativeValue.
+        value: native ? parsed : 0n,
       },
       t('employer:vaults.funding'),
-      t('employer:vaults.funded', {amount: native ? formatKRW(value, lang) : fundAmt}),
+      t('employer:vaults.funded', {amount: fmt(parsed)}),
     );
     if (ok) {
       setFundAmt('');
+      refetchAllowance();
       onDone();
     }
   };
@@ -373,7 +517,12 @@ function EmployerVaultRow({vault, onDone}: {vault: Vault; onDone: () => void}) {
     if (ok) onDone();
   };
 
-  const canClose = state !== 'streaming' && state !== 'pending' && !vault.closed;
+  // Asks the same question the contract does, rather than inferring it from the badge. The old
+  // condition excluded 'streaming' — but a fully funded vault whose period had ended reported
+  // 'streaming' forever, so the Close button never appeared for exactly the vaults that were
+  // ready to settle. That is the call that refunds overfunding and books the on-time record,
+  // so employers could not earn a solvency score at all.
+  const closable = canClose(vault, now);
 
   return (
     <VaultCard vault={vault} role="employer">
@@ -383,18 +532,27 @@ function EmployerVaultRow({vault, onDone}: {vault: Vault; onDone: () => void}) {
             <input
               value={fundAmt}
               onChange={(e) => setFundAmt(e.target.value)}
-              placeholder={`${t('employer:vaults.fundAmount')} (ETH)`}
+              placeholder={`${t('employer:vaults.fundAmount')} (${native ? t('common:units.eth') : token.symbol || t('common:labels.token')})`}
               className="w-full rounded border-2 border-ink bg-ink px-3 py-2 font-mono text-sm text-hanji placeholder:text-hanji/30 focus:border-cheong focus:outline-none"
               inputMode="decimal"
             />
           </div>
-          <Button variant="gold" onClick={fund} loading={pending} disabled={!fundAmt}>
-            {t('employer:vaults.fundSubmit')}
-          </Button>
-          {canClose && (
+          {needsApproval ? (
+            <Button variant="cheong" onClick={approve} loading={pending} disabled={!amountReady}>
+              {t('employer:vaults.approveCta', {symbol: token.symbol || t('common:labels.token')})}
+            </Button>
+          ) : (
+            <Button variant="gold" onClick={fund} loading={pending} disabled={!amountReady}>
+              {t('employer:vaults.fundSubmit')}
+            </Button>
+          )}
+          {closable && (
             <Button variant="ghost" onClick={close} loading={pending}>
               {t('employer:vaults.closeCta')}
             </Button>
+          )}
+          {needsApproval && (
+            <p className="w-full text-xs text-hanji/50">{t('employer:vaults.approveHint')}</p>
           )}
         </div>
       )}
@@ -430,6 +588,29 @@ function Field({
   );
 }
 
+function TokenModeButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex-1 rounded border-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
+        active ? 'border-ink bg-dan-gold text-ink' : 'border-hanji/25 text-hanji/60 hover:text-hanji'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 function Prompt({msg, tone}: {msg: string; tone?: 'vermil'}) {
   return (
     <div
@@ -440,9 +621,6 @@ function Prompt({msg, tone}: {msg: string; tone?: 'vermil'}) {
   );
 }
 
-// Read-only slice of the deployed UpIdResolver, which adapts GIWA's live UPNameRegistry.
-// Inlined rather than synced because it is one view and IMGEUM never writes names — name
-// issuance happens at the GIWA Playground, outside this app.
 /**
  * How far ahead of the current block a new pay period starts.
  *
@@ -455,20 +633,3 @@ const START_LEAD_IN = 120n;
 
 /** The only suffix up.id issues, mirroring `UpIdResolver.SUFFIX`. */
 const UP_ID_SUFFIX = '.up.id';
-
-const UP_ID_RESOLVER_ABI = [
-  {
-    type: 'function',
-    name: 'reverse',
-    stateMutability: 'view',
-    inputs: [{name: 'addr', type: 'address'}],
-    outputs: [{name: 'name', type: 'string'}],
-  },
-  {
-    type: 'function',
-    name: 'resolve',
-    stateMutability: 'view',
-    inputs: [{name: 'name', type: 'string'}],
-    outputs: [{name: 'owner', type: 'address'}],
-  },
-] as const;

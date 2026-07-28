@@ -105,10 +105,10 @@
       "window": "Aug–Sep",
       "items": {
         "forward": "Pay by name: an employer can type a worker's name.up.id when opening a vault, and it resolves to an address before the transaction is built.",
-        "reverse": "Show names in place of hex. Every address in the app — including the employer a worker most needs to recognise — still renders as raw hex; reverse resolution turns those into up.id names on vault cards and evidence pages.",
-        "directory": "A public employer directory, so a worker can look up a company's pay-reliability score before taking the job. The score is already computed on-chain; today only the employer themselves can see it.",
-        "profile": "Per-employer public profile: funding history and every arrears record ever filed against them, in one place.",
-        "erc20": "Stablecoin wage vaults. The contract already accepts any ERC-20 and handles fee-on-transfer tokens safely; the app currently opens ETH vaults only.",
+        "reverse": "Names in place of hex: vault cards, evidence pages and the wallet button all show a holder's up.id name when they have one, with the address still one hover or copy away.",
+        "directory": "A public employer directory anyone can read without a wallet, so a worker can look up a company's pay-reliability score before taking the job rather than after.",
+        "profile": "Per-employer public profile: identity, score, funding record and every arrears record ever filed against them, each linking to its evidence page.",
+        "erc20": "Stablecoin wage vaults. Name any ERC-20 when opening a vault; amounts are parsed and displayed at that token's own decimals, and funding takes the approve step the token requires.",
         "oracle": "Live KRW through the Upbit Oracle. Won amounts in the app are currently converted at a fixed display rate — an evidence page handed to a labour office needs a real one.",
         "flashblocks": "Use Flashblocks preconfirmations so funding and withdrawal land in the interface in roughly 200ms, rather than the app merely describing that they can.",
         "audit": "External contract audit through the GIWA builder package."

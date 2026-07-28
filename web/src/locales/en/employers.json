@@ -1,0 +1,27 @@
+{
+  "title": "Employer directory",
+  "subtitle": "Check a company before you take the job",
+  "body": "Every registered employer, with the pay-reliability score the contracts compute from their actual funding history. No wallet needed to read this page.",
+  "searchPlaceholder": "Search name, up.id or address",
+  "count": "Showing {{shown}} of {{total}} registered",
+  "emptyRegistry": "No employers have registered yet.",
+  "emptySearch": "Nothing on this page matches. Try another page, or search the full address.",
+  "unnamed": "Unnamed company",
+  "view": "View profile →",
+  "pager": {
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {{page}} of {{of}}"
+  },
+  "profile": {
+    "back": "All employers",
+    "notFound": "That is not a valid wallet address.",
+    "notRegistered": "This address has not registered as an employer on IMGEUM.",
+    "registered": "Registered {{date}}",
+    "scoreBody": "Computed on-chain from settled pay periods — on-time settlements raise it, arrears lower it, and a recent arrears event lowers it hardest.",
+    "openExplorer": "View on GIWA explorer",
+    "arrearsHeading": "Arrears records",
+    "arrearsBody": "Permanent, public evidence records filed against this employer. Anyone can open the underlying record and re-verify it against GIWA's own contracts.",
+    "arrearsNone": "No arrears have ever been recorded against this employer."
+  }
+}

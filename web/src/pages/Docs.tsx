@@ -45,10 +45,10 @@ const ROADMAP: {phase: string; stage: Stage; items: [string, Stage][]}[] = [
     stage: 'building',
     items: [
       ['forward', 'done'],
-      ['reverse', 'building'],
-      ['directory', 'building'],
-      ['profile', 'planned'],
-      ['erc20', 'building'],
+      ['reverse', 'done'],
+      ['directory', 'done'],
+      ['profile', 'done'],
+      ['erc20', 'done'],
       ['oracle', 'planned'],
       ['flashblocks', 'planned'],
       ['audit', 'planned'],
@@ -331,7 +331,8 @@ function VerifyPanel() {
           <li key={name} className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="font-mono text-ink/70">{name}</span>
             <a href={explorerAddress(addr)} target="_blank" rel="noreferrer" className="font-mono text-cheong hover:text-vermil">
-              <AddressChip address={addr} link />
+              {/* Deployed contracts, not people — there is no name to look up. */}
+              <AddressChip address={addr} link resolve={false} />
             </a>
           </li>
         ))}

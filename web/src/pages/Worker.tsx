@@ -12,9 +12,8 @@ import {useImgeum} from '../hooks/useImgeum';
 import {useWorkerVaultIds, useVaults} from '../hooks/useVaults';
 import {useTx} from '../hooks/useTx';
 import {useSecondsClock} from '../hooks/useClock';
-import {useLang} from '../hooks/useLang';
-import {withdrawableAt, vaultState, isNative, type Vault, type Address} from '../lib/vault';
-import {formatKRW, formatToken} from '../lib/format';
+import {useAmountFormat} from '../hooks/useToken';
+import {withdrawableAt, vaultState, type Vault, type Address} from '../lib/vault';
 import {ACTIVE_CHAIN, GIWA_BLOCK_TIME_MS} from '../config/giwa';
 import type {Abi} from 'viem';
 
@@ -45,9 +44,17 @@ export default function Worker() {
     },
   });
 
-  const active = vaults.filter((v) => vaultState(v, now) === 'streaming' || vaultState(v, now) === 'pending');
-  const breached = vaults.filter((v) => vaultState(v, now) === 'breached');
-  const settled = vaults.filter((v) => vaultState(v, now) === 'settled');
+  // Partitioned exhaustively, so every vault the worker owns appears in exactly one section.
+  // 'ended' — period finished, not yet closed — belongs with the active ones: the wages are
+  // fully accrued and still withdrawable, which is the last state a worker should have to hunt
+  // for. It is the employer's Close transaction, not the end of the period, that settles it.
+  const states = useMemo(() => new Map(vaults.map((v) => [v.id, vaultState(v, now)])), [vaults, now]);
+  const active = vaults.filter((v) => {
+    const s = states.get(v.id);
+    return s === 'streaming' || s === 'pending' || s === 'ended';
+  });
+  const breached = vaults.filter((v) => states.get(v.id) === 'breached');
+  const settled = vaults.filter((v) => states.get(v.id) === 'settled');
   const primary = active[0] ?? breached[0] ?? vaults[0];
 
   return (
@@ -122,11 +129,10 @@ export default function Worker() {
 
 function WithdrawPanel({vault, onDone}: {vault: Vault; onDone: () => void}) {
   const {t} = useTranslation();
-  const {lang} = useLang();
+  const fmt = useAmountFormat(vault.token);
   const now = useSecondsClock();
   const w = withdrawableAt(vault, now);
-  const native = isNative(vault.token);
-  const label = native ? formatKRW(w, lang) : `${formatToken(w)} ${t('common:units.krw')}`;
+  const label = fmt(w);
   return (
     <div className="rounded border-2 border-ink bg-ink-2 p-4">
       <div className="text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-hanji/50">
@@ -142,13 +148,13 @@ function WithdrawPanel({vault, onDone}: {vault: Vault; onDone: () => void}) {
 
 function WithdrawButton({vault, onDone, inline}: {vault: Vault; onDone: () => void; inline?: boolean}) {
   const {t} = useTranslation();
-  const {lang} = useLang();
+  const fmt = useAmountFormat(vault.token);
   const {vault: vaultContract} = useImgeum();
   const {send, pending} = useTx();
   const now = useSecondsClock();
   const w = withdrawableAt(vault, now);
   const disabled = w === 0n;
-  const label = isNative(vault.token) ? formatKRW(w, lang) : `${formatToken(w)}`;
+  const label = fmt(w);
 
   const onWithdraw = async () => {
     if (!vaultContract) return;
