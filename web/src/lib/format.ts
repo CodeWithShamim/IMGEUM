@@ -8,18 +8,26 @@ import type {Lang} from '../i18n';
 
 const localeTag = (lang: Lang) => (lang === 'ko' ? 'ko-KR' : 'en-US');
 
-/** Format a bigint token amount (18 decimals) as a compact decimal string. */
-export function formatToken(value: bigint, decimals = 18, maxFrac = 4): string {
+/**
+ * Format a bigint token amount as a compact decimal string.
+ *
+ * `lang` is threaded through rather than left to `toLocaleString`'s default, which resolves to
+ * the BROWSER's locale. That default made a single screen inconsistent with itself: `formatKRW`
+ * on the same row already honours the app's language, so a Korean worker on an en-US phone —
+ * the ordinary case for a migrant worker, and for anyone who never changed their handset
+ * defaults — read the won figure in Korean grouping and the token figure beside it in another.
+ */
+export function formatToken(value: bigint, decimals = 18, maxFrac = 4, lang: Lang = 'ko'): string {
   const raw = formatUnits(value, decimals);
   const n = Number(raw);
   if (!Number.isFinite(n)) return raw;
-  return n.toLocaleString(undefined, {maximumFractionDigits: maxFrac});
+  return n.toLocaleString(localeTag(lang), {maximumFractionDigits: maxFrac});
 }
 
 /** High-precision token format for the ticking wage counter (keeps small per-second motion visible). */
-export function formatTokenPrecise(value: bigint, decimals = 18, frac = 6): string {
+export function formatTokenPrecise(value: bigint, decimals = 18, frac = 6, lang: Lang = 'ko'): string {
   const n = Number(formatUnits(value, decimals));
-  return n.toLocaleString(undefined, {minimumFractionDigits: frac, maximumFractionDigits: frac});
+  return n.toLocaleString(localeTag(lang), {minimumFractionDigits: frac, maximumFractionDigits: frac});
 }
 
 /**

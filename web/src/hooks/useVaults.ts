@@ -1,5 +1,5 @@
 import {useReadContract, useReadContracts} from 'wagmi';
-import {useMemo} from 'react';
+import {useMemo, useRef} from 'react';
 import {useImgeum} from './useImgeum';
 import {toVault, type Address, type Vault} from '../lib/vault';
 import {GIWA_BLOCK_TIME_MS, ACTIVE_CHAIN} from '../config/giwa';
@@ -59,11 +59,31 @@ export function useVaults(ids?: readonly bigint[]): {vaults: Vault[]; isLoading:
     query: {enabled: isDeployed && (ids?.length ?? 0) > 0, refetchInterval: POLL},
   });
 
+  // Last known good struct per vault id.
+  //
+  // `useReadContracts` reports per-call outcomes, and a call that failed for RPC reasons is
+  // indistinguishable here from one that failed for contract reasons — both arrive as
+  // `status: 'failure'`. Dropping those, which is what this did, meant a single rate-limited
+  // response inside the batch erased a vault from the worker's list mid-poll: their wages
+  // disappeared off the screen for a second and came back. Every id in this list came from the
+  // contract's own index, so `getVault` cannot legitimately fail for one; holding the previous
+  // value is strictly better than showing nothing.
+  const lastGood = useRef(new Map<string, Vault>());
+
   const vaults = useMemo(() => {
     if (!data || !ids) return [];
     const results = data as ReadonlyArray<{status: string; result?: unknown}>;
+    const cache = lastGood.current;
     return results
-      .map((res, i) => (res.status === 'success' ? toVault(ids[i], res.result as Record<string, unknown>) : null))
+      .map((res, i) => {
+        const key = ids[i].toString();
+        if (res.status === 'success') {
+          const vault = toVault(ids[i], res.result as Record<string, unknown>);
+          cache.set(key, vault);
+          return vault;
+        }
+        return cache.get(key) ?? null;
+      })
       .filter((v): v is Vault => v !== null);
   }, [data, ids]);
 

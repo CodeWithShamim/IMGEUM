@@ -58,6 +58,26 @@ contract EmployerRegistry is IEmployerRegistry, Ownable2Step {
     ///      rather than a flattering 1000 earned from a single self-dealt vault.
     uint32 public constant MIN_SETTLED_FOR_RATING = 3;
 
+    /// @notice Gas budget handed to the up.id resolver on the name-confirmation call.
+    ///
+    /// @dev The `try` in `_checkUpId` is not sufficient on its own. EIP-150 forwards 63/64 of
+    ///      the remaining gas to an external call, so a resolver that simply burns everything it
+    ///      is given leaves the caller 1/64 to finish with — far less than the storage writes in
+    ///      `register` still need. The catch block is reached and then the whole transaction
+    ///      runs out of gas anyway, which is precisely the "hostile resolver bricks
+    ///      registration" outcome `_checkUpId` claims to prevent.
+    ///
+    ///      `upIdResolver` is the one owner lever in this contract that stays mutable
+    ///      (`setAttestor` is write-once, `setRecorder` is grant-only), so it is also the one
+    ///      that has to be defused. Capping the forwarded gas makes the documented guarantee
+    ///      true: a hostile resolver can cost an employer a cosmetic `upIdVerified` badge and
+    ///      nothing else.
+    ///
+    ///      250k is roughly an order of magnitude above what `src/UpIdResolver.sol` spends
+    ///      (a keccak plus three staticcalls into UPNameRegistry), so an honest resolver — and
+    ///      a comfortably more expensive future one — is never starved by this bound.
+    uint256 public constant UPID_RESOLVE_GAS = 250_000;
+
     /* -------------------------------------------------------------------------- */
     /*                                   STORAGE                                  */
     /* -------------------------------------------------------------------------- */
@@ -379,10 +399,14 @@ contract EmployerRegistry is IEmployerRegistry, Ownable2Step {
     ///      name is empty, or when the resolver reverts — an unavailable name service must
     ///      never block payroll. The `try` guard matters: `upIdResolver` is owner-set and a
     ///      misconfigured or hostile resolver could otherwise brick registration entirely.
+    ///
+    ///      The explicit gas bound is the other half of that guard, and is load-bearing rather
+    ///      than decorative — see `UPID_RESOLVE_GAS`. Without it a resolver that burns its whole
+    ///      allowance walks straight through the `catch` and out of gas.
     function _checkUpId(string calldata name, address claimant) internal view returns (bool) {
         IUpIdResolver resolver = upIdResolver;
         if (address(resolver) == address(0) || bytes(name).length == 0) return false;
-        try resolver.resolve(name) returns (address owner) {
+        try resolver.resolve{gas: UPID_RESOLVE_GAS}(name) returns (address owner) {
             return owner == claimant;
         } catch {
             return false;

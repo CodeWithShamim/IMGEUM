@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {BaseTest} from "./Base.t.sol";
 import {WageVault} from "../src/WageVault.sol";
+import {IUpIdResolver} from "../src/interfaces/IUpIdResolver.sol";
 
 /// @notice Regressions for the audit findings fixed in this change.
 contract AuditRegressions is BaseTest {
@@ -77,6 +78,52 @@ contract AuditRegressions is BaseTest {
     function test_employersPaged_hugeLimitDoesNotOverflow() public view {
         address[] memory page = registry.employersPaged(0, type(uint256).max);
         assertEq(page.length, registry.employerCount());
+    }
+
+    /* ----------------------------------------------------------------------- */
+    /*            a hostile up.id resolver cannot brick registration            */
+    /* ----------------------------------------------------------------------- */
+
+    /// @dev `_checkUpId` wraps the resolver in `try/catch` and documents that as making a
+    ///      hostile resolver harmless. It was not sufficient on its own: EIP-150 hands an
+    ///      external call 63/64 of the remaining gas, so a resolver that burns everything
+    ///      leaves `register` 1/64 to finish its storage writes with. Control reached the
+    ///      `catch` and the transaction then ran out of gas regardless — bricking registration
+    ///      for every employer via the one owner lever this contract leaves mutable.
+    function test_upId_gasBurningResolverCannotBlockRegistration() public {
+        GasBurningResolver hostile = new GasBurningResolver();
+        vm.prank(owner);
+        registry.setUpIdResolver(address(hostile));
+
+        address victim = makeAddr("victimEmployer");
+        vm.prank(victim);
+        dojang.selfVerify(ATTESTER);
+
+        // A realistic wallet-sized gas budget, not an unbounded test-harness one: the point is
+        // that the resolver cannot consume a normal transaction's allowance.
+        vm.prank(victim);
+        registry.register{gas: 1_000_000}("victim.up.id", unicode"피해 주식회사");
+
+        assertTrue(registry.isRegistered(victim), "registration bricked by hostile resolver");
+        // The badge is the only casualty, which is the documented failure mode.
+        assertFalse(registry.getEmployer(victim).upIdVerified, "unverifiable name marked verified");
+    }
+
+    /// @dev The bound must not starve an honest resolver: the same path still confirms a name.
+    function test_upId_honestResolverStillConfirmsUnderGasBound() public {
+        address named = makeAddr("namedEmployer");
+        vm.prank(named);
+        upid.claim("named.up.id");
+
+        vm.prank(owner);
+        registry.setUpIdResolver(address(upid));
+
+        vm.prank(named);
+        dojang.selfVerify(ATTESTER);
+        vm.prank(named);
+        registry.register("named.up.id", unicode"정상 주식회사");
+
+        assertTrue(registry.getEmployer(named).upIdVerified, "honest resolution starved by gas bound");
     }
 
     /* -------------------------------- helpers ------------------------------- */
@@ -158,5 +205,23 @@ contract AuditRegressions is BaseTest {
             if (hit) return true;
         }
         return false;
+    }
+}
+
+/// @notice TEST-ONLY hostile resolver: burns every unit of gas it is handed.
+/// @dev The `while` loop writes so the optimizer cannot elide it. `resolve` is declared view in
+///      `IUpIdResolver`, so this is reached through a staticcall — which still forwards 63/64
+///      of the caller's remaining gas, and still leaves the caller starved on return.
+contract GasBurningResolver is IUpIdResolver {
+    function resolve(string calldata) external pure returns (address) {
+        uint256 sink;
+        while (true) {
+            sink = uint256(keccak256(abi.encode(sink)));
+        }
+        return address(uint160(sink));
+    }
+
+    function reverse(address) external pure returns (string memory) {
+        return "";
     }
 }

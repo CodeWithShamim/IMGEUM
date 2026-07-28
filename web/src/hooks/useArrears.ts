@@ -1,8 +1,16 @@
 import {useMemo} from 'react';
 import {useReadContract, useReadContracts} from 'wagmi';
 import {useImgeum} from './useImgeum';
-import {ACTIVE_CHAIN} from '../config/giwa';
+import {ACTIVE_CHAIN, GIWA_BLOCK_TIME_MS} from '../config/giwa';
 import type {Address} from '../lib/vault';
+
+/**
+ * Only the INDEXES poll. A record, once attested, is immutable by design — re-reading one can
+ * never return anything different, so `useArrearsRecords` deliberately has no interval. What
+ * changes is whether a new id has been appended, and that is nearly always appended by the other
+ * party: a worker files, and the employer's console has to notice without a reload.
+ */
+const INDEX_POLL = GIWA_BLOCK_TIME_MS * 10;
 
 /** One immutable arrears record, as `ArrearsAttestor.getRecord` returns it. */
 export interface ArrearsRecord {
@@ -44,7 +52,7 @@ export function useEmployerArrearsIds(employer?: Address) {
     chainId: CHAIN,
     functionName: 'recordsOfEmployer',
     args: employer ? [employer] : undefined,
-    query: {enabled: isDeployed && !!employer},
+    query: {enabled: isDeployed && !!employer, refetchInterval: INDEX_POLL},
   });
 }
 
@@ -56,7 +64,7 @@ export function useWorkerArrearsIds(worker?: Address) {
     chainId: CHAIN,
     functionName: 'recordsOfWorker',
     args: worker ? [worker] : undefined,
-    query: {enabled: isDeployed && !!worker},
+    query: {enabled: isDeployed && !!worker, refetchInterval: INDEX_POLL},
   });
 }
 

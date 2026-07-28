@@ -1,7 +1,6 @@
 import {useEffect, useImperativeHandle, useRef, forwardRef} from 'react';
 import {useTranslation} from 'react-i18next';
 import {usePrefersReducedMotion} from '../../hooks/usePrefersReducedMotion';
-import {useAnimationClock} from '../../hooks/useClock';
 import {useAmountFormat} from '../../hooks/useToken';
 import {earnedFloat, ratePerSecond, type Vault} from '../../lib/vault';
 
@@ -31,7 +30,6 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
   const {t} = useTranslation();
   const fmt = useAmountFormat(vault.token);
   const reduced = usePrefersReducedMotion();
-  const nowMs = useAnimationClock();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const counterRef = useRef<HTMLDivElement>(null);
@@ -39,8 +37,23 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
   const raf = useRef<number>();
   const lastEmit = useRef(0);
 
-  const rate = ratePerSecond(vault); // wei/sec as float
-  const rateEthPerSec = rate / 1e18;
+  /**
+   * The animation reads these through refs rather than through the closure it was created in.
+   *
+   * This component used to take its clock from `useAnimationClock`, which drives React state on
+   * every frame — so the "direct textContent write avoids re-rendering the tree 60x/sec" note
+   * below was describing something that was not happening: WageStream and everything under it
+   * re-rendered on every animation frame regardless. That cost lands on the worker view, which
+   * is explicitly built to run as a tab inside the GIWA Wallet on whatever handset the worker
+   * owns. Refs let the loop see fresh values without a single re-render.
+   */
+  const vaultRef = useRef(vault);
+  const fmtRef = useRef(fmt);
+  vaultRef.current = vault;
+  fmtRef.current = fmt;
+
+  const rate = ratePerSecond(vault); // token base units per second, as a float
+  const rateIsLive = rate > 0;
 
   useImperativeHandle(ref, () => ({
     burst: () => {
@@ -61,6 +74,7 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
   }));
 
   // Canvas particle loop — coins spawn along the beam and flow rightward into the balance.
+  // Doubles as the counter's clock: one rAF for both, so the two can never drift apart.
   useEffect(() => {
     if (reduced) return;
     const canvas = canvasRef.current;
@@ -78,11 +92,19 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
     resize();
     window.addEventListener('resize', resize);
 
-    const streaming = nowMsIsStreaming(vault);
     const loop = (t: number) => {
+      // Re-evaluated every frame, not captured once at mount. It used to be read here, outside
+      // the loop, from a `Date.now()` taken as the effect was set up — and the effect only
+      // re-runs when the period bounds change. A vault opened through the employer form starts
+      // two minutes in the future (`START_LEAD_IN`), so it mounted as not-yet-streaming and
+      // stayed frozen for the rest of the session: the counter ticked while the signature coin
+      // stream — the one element the whole worker view is built around — never started at all.
+      const streaming = isStreaming(vaultRef.current);
       const w = canvas.getBoundingClientRect().width;
       const h = canvas.getBoundingClientRect().height;
       ctx.clearRect(0, 0, w, h);
+
+      writeCounter();
 
       // Steady emission proportional to the wage rate while the stream is active.
       if (streaming && t - lastEmit.current > 90) {
@@ -122,17 +144,29 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
       window.removeEventListener('resize', resize);
       if (raf.current) cancelAnimationFrame(raf.current);
     };
+    // Mounts once per motion preference. Everything time- or vault-dependent is read from a
+    // ref inside the loop, so there is nothing left for a dependency to invalidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced, vault.periodStart, vault.periodEnd]);
+  }, [reduced]);
 
-  // DOM counter — interpolate earned wage each frame. Direct textContent write avoids
-  // re-rendering the tree 60x/sec.
+  // Under prefers-reduced-motion no canvas is mounted, so the counter needs its own clock.
+  // 1Hz, matching GIWA's block time: the figure still moves, it just doesn't animate.
   useEffect(() => {
+    if (!reduced) return;
+    writeCounter();
+    const id = setInterval(writeCounter, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduced]);
+
+  // Paint the current earned figure straight into the DOM node. Now genuinely off React's
+  // render path — see the ref block above.
+  function writeCounter() {
     const el = counterRef.current;
     if (!el) return;
-    const earned = earnedFloat(vault, nowMs);
-    el.textContent = fmt(BigInt(Math.floor(earned)));
-  }, [nowMs, vault, fmt]);
+    const earned = earnedFloat(vaultRef.current, Date.now());
+    el.textContent = fmtRef.current(BigInt(Math.floor(earned)));
+  }
 
   return (
     <div className="relative overflow-hidden rounded border-2 border-ink bg-ink-2 p-5">
@@ -160,13 +194,13 @@ export const WageStream = forwardRef<WageStreamHandle, {vault: Vault}>(function 
         —
       </div>
       <div className="mt-1 font-mono text-xs text-nok">
-        + {rateEthPerSec > 0 ? fmt(BigInt(Math.floor(rate))) : '—'} {t('common:units.perSecond')}
+        + {rateIsLive ? fmt(BigInt(Math.floor(rate))) : '—'} {t('common:units.perSecond')}
       </div>
     </div>
   );
 });
 
-function nowMsIsStreaming(v: Vault): boolean {
+function isStreaming(v: Vault): boolean {
   const now = Date.now() / 1000;
   return now >= Number(v.periodStart) && now < Number(v.periodEnd) && !v.closed;
 }

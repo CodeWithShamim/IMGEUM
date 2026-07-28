@@ -82,7 +82,7 @@ export function useAmountFormat(token: Address): (value: bigint) => string {
   return useCallback(
     (value: bigint) => {
       if (meta.native) return formatKRW(value, lang);
-      const amount = formatToken(value, meta.decimals);
+      const amount = formatToken(value, meta.decimals, 4, lang);
       return meta.symbol ? `${amount} ${meta.symbol}` : amount;
     },
     [lang, meta.decimals, meta.native, meta.symbol],

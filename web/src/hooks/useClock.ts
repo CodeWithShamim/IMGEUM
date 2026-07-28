@@ -1,33 +1,19 @@
-import {useEffect, useRef, useState} from 'react';
-import {usePrefersReducedMotion} from './usePrefersReducedMotion';
+import {useEffect, useState} from 'react';
 
 /**
- * A high-frequency clock for interpolating the wage counter between block reads.
- * Returns performance-now-ish milliseconds, updated on requestAnimationFrame (~60fps) unless
- * the user prefers reduced motion, in which case it falls back to a 1s tick.
+ * There is deliberately no per-frame clock hook here.
+ *
+ * One used to live in this file — a `useAnimationClock` that called `setNow(Date.now())` from a
+ * requestAnimationFrame loop. Any component reading it re-rendered sixty times a second, which
+ * is what WageStream was doing while its own comments described the opposite. A 60fps clock
+ * expressed as React state cannot be anything else, so the fix was not to tune it but to keep
+ * the frame loop off the render path entirely: WageStream now runs one rAF that writes the
+ * counter's `textContent` directly and reads live values through refs.
+ *
+ * The rule that leaves behind: per-frame animation belongs in the component that animates,
+ * driven by rAF and refs. Shared clocks are for values slow enough to be state — which, at
+ * GIWA's 1s block time, means `useSecondsClock` below.
  */
-export function useAnimationClock(): number {
-  const reduced = usePrefersReducedMotion();
-  const [now, setNow] = useState(() => Date.now());
-  const raf = useRef<number>();
-
-  useEffect(() => {
-    if (reduced) {
-      const id = setInterval(() => setNow(Date.now()), 1000);
-      return () => clearInterval(id);
-    }
-    const loop = () => {
-      setNow(Date.now());
-      raf.current = requestAnimationFrame(loop);
-    };
-    raf.current = requestAnimationFrame(loop);
-    return () => {
-      if (raf.current) cancelAnimationFrame(raf.current);
-    };
-  }, [reduced]);
-
-  return now;
-}
 
 /** A plain 1Hz clock (seconds) for non-animated live values. */
 export function useSecondsClock(): number {

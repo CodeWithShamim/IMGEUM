@@ -30,10 +30,28 @@ export interface Deployment {
 
 const all = deployments as Record<string, Deployment>;
 
-// Prefer the GIWA Sepolia deployment; fall back to any local (31337) for dev.
+/**
+ * The deployment for one chain, or undefined.
+ *
+ * Never falls back to another chain's addresses, and that restriction is the whole point.
+ * `sync-contracts.mjs` merges every file in `contracts/deployments/` into one object keyed by
+ * chain id, so a local anvil run drops a `31337` entry in alongside GIWA's. The previous
+ * `?? Object.values(all)[0]` meant that on a checkout where the GIWA entry was absent — a fresh
+ * clone that deployed locally first, or an artifact lost to a rebase — every hook would silently
+ * receive the ANVIL addresses while `useTx` pinned the signature to GIWA. The result is not a
+ * failed read: it is `fund()` sending real ETH to a GIWA address that holds no code, with the
+ * UI reporting success because the transaction itself succeeded.
+ *
+ * A missing deployment must present as missing. `isDeployed` is false, every page renders its
+ * "not deployed" state, and nothing can be signed — which is what the callers of this function
+ * have always documented themselves as expecting.
+ */
 export function getDeployment(chainId?: number): Deployment | undefined {
-  if (chainId && all[String(chainId)]) return all[String(chainId)];
-  return all[String(GIWA_SEPOLIA_CHAIN_ID)] ?? Object.values(all)[0];
+  const found = all[String(chainId ?? GIWA_SEPOLIA_CHAIN_ID)];
+  // Guard the artifact against itself: a file whose key and `chainId` field disagree has been
+  // hand-edited or mis-merged, and its addresses are not trustworthy for either chain.
+  if (!found || found.chainId !== (chainId ?? GIWA_SEPOLIA_CHAIN_ID)) return undefined;
+  return found;
 }
 
 export const abis = {

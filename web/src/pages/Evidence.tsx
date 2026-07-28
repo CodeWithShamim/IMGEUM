@@ -36,6 +36,9 @@ interface ArrearsRecord {
   attester: Address;
 }
 
+/** An absent EAS attestation UID: what `getEmployer` reports when nothing was ever snapshotted. */
+const ZERO_UID = `0x${'0'.repeat(64)}` as const;
+
 /**
  * A URL path segment as a non-negative id, or undefined if it is not one.
  *
@@ -172,6 +175,11 @@ function EvidenceDocument({
   const {name: workerNameNow} = useUpId(rec.worker);
   const employerNameChanged = !!employerNameNow && !!rec.employerUpId && employerNameNow !== rec.employerUpId;
 
+  // "Was this employer a verified Korean entity at the moment the record was written?" — answered
+  // by the frozen attestation UID the contract snapshotted, which is the only evidence of it that
+  // survives the employer letting their Dojang verification lapse.
+  const verifiedAtRecord = !!rec.employerDojangUid && rec.employerDojangUid !== ZERO_UID;
+
   return (
     <PaperShell>
       {/* Document header with the vermilion dojang seal stamp. */}
@@ -235,10 +243,19 @@ function EvidenceDocument({
         </Section>
 
         <Section title={t('evidence:sections.verification')}>
+          {/*
+            Read from the record, never asserted. This row used to be a hardcoded "yes" — the one
+            claim on the page that was printed without checking anything. The contract freezes
+            `employerDojangUid` at attestation precisely so this can be verified rather than
+            assumed, and the row directly below it already renders the live re-check honestly.
+            Today's registration path does gate on Dojang, so the constant happened to be true;
+            a document that goes to the Ministry of Employment and Labor should not depend on
+            that coincidence holding through the next registry migration.
+          */}
           <Row
             label={t('evidence:verification.atRecord')}
-            value={t('evidence:verification.yes')}
-            tone="nok"
+            value={verifiedAtRecord ? t('evidence:verification.yes') : t('evidence:verification.no')}
+            tone={verifiedAtRecord ? 'nok' : 'vermil'}
           />
           <Row
             label={t('evidence:verification.now')}

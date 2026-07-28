@@ -55,7 +55,8 @@
     "submit": "Open vault",
     "opening": "Opening…",
     "success": "Vault opened",
-    "minPeriod": "Pay period must be at least {{count}} day(s) — the contract rejects anything shorter."
+    "minPeriod": "Pay period must be at least {{count}} day(s) — the contract rejects anything shorter.",
+    "maxPeriod": "Pay period cannot exceed {{count}} day(s) — the contract rejects anything longer."
   },
   "vaults": {
     "heading": "Your vaults",

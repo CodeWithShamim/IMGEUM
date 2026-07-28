@@ -7,10 +7,12 @@ import {
   UserRejectedRequestError,
   TransactionExecutionError,
 } from 'viem';
+import {useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {useToasts} from './useToasts';
 import {useNetwork} from './useNetwork';
 import {ACTIVE_CHAIN} from '../config/giwa';
+import {refreshChainReads, waitForReadSync} from '../lib/sync';
 
 interface WriteArgs {
   address: `0x${string}`;
@@ -101,10 +103,18 @@ export function errorKey(err: unknown): string {
  * before signing and refuses to sign on a mismatch. Without the second guard a wallet sitting
  * on, say, Ethereum mainnet would happily sign `fund()` against the GIWA vault address on
  * mainnet — a real transfer, to an address that means nothing there.
+ *
+ * A confirmed write also refreshes the read cache before it reports done — see `lib/sync`. Every
+ * caller used to be responsible for refetching the one hook it happened to hold a handle to,
+ * which meant a successful transaction updated part of the screen and left the rest showing
+ * pre-transaction state: `fund` never refreshed the employer's score or counters, `openVault`
+ * never refreshed the vault ID list the new vault had just been added to, and `attestArrears`
+ * never refreshed the arrears lists at all.
  */
 export function useTx() {
   const {t} = useTranslation();
   const config = useConfig();
+  const queryClient = useQueryClient();
   const {isConnected} = useAccount();
   const {ensureNetwork} = useNetwork();
   const {writeContractAsync} = useWriteContract();
@@ -143,7 +153,24 @@ export function useTx() {
           setPending(false);
           return null;
         }
+        // The transaction is settled, so say so now — the cache work below is the UI catching
+        // up, not part of whether the write succeeded.
         update(id, {kind: 'success', message: successMsg, txHash: hash});
+
+        // Hold the button in its loading state across the refresh. It costs a few hundred
+        // milliseconds and it is the difference between "paid" appearing next to the old
+        // balance and appearing next to the new one.
+        //
+        // Contained, because the write is already final: nothing that happens while refreshing a
+        // cache may reach the catch below and relabel a confirmed transaction as failed. The
+        // fallback is the polls, which is what this code path had before.
+        try {
+          await waitForReadSync(config, ACTIVE_CHAIN.id, receipt.blockNumber);
+          await refreshChainReads(queryClient);
+        } catch {
+          /* stale UI for one poll interval, never a false failure */
+        }
+
         setPending(false);
         return hash;
       } catch (err) {
@@ -152,7 +179,7 @@ export function useTx() {
         return null;
       }
     },
-    [config, ensureNetwork, isConnected, push, update, writeContractAsync, t],
+    [config, queryClient, ensureNetwork, isConnected, push, update, writeContractAsync, t],
   );
 
   return {send, pending};

@@ -299,9 +299,13 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   const workerAddress = typedAddress ?? resolvedAddress;
   const nameUnresolved = looksLikeName && !resolution.isFetching && !resolvedAddress;
 
-  // The contract enforces a floor on how far ahead `periodEnd` may sit (WageVault.MIN_PERIOD,
-  // the guard that stops pay-reliability scores being farmed). Read it rather than hardcoding
-  // it, so the form can never drift out of step with a redeployed contract.
+  // The contract bounds the pay period at BOTH ends: `MIN_PERIOD` is the floor that stops
+  // pay-reliability scores being farmed, `MAX_PERIOD` the ceiling that keeps `wageAmount *
+  // elapsed` away from overflow and a worker out of a decade-long stream. Only the floor was
+  // checked here, so an employer typing 400 got a signature request, a mined revert, and a
+  // toast reading "invalid period" — no bound, no direction, and the gas already spent. Both
+  // are read from the contract rather than hardcoded, so the form cannot drift out of step
+  // with a redeployed one.
   const {data: minPeriodRaw} = useReadContract({
     address: vault?.address as Address,
     abi: vault?.abi as Abi,
@@ -309,7 +313,15 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
     functionName: 'MIN_PERIOD',
     query: {enabled: !!vault},
   });
+  const {data: maxPeriodRaw} = useReadContract({
+    address: vault?.address as Address,
+    abi: vault?.abi as Abi,
+    chainId: ACTIVE_CHAIN.id,
+    functionName: 'MAX_PERIOD',
+    query: {enabled: !!vault},
+  });
   const minDays = minPeriodRaw ? Number(minPeriodRaw as bigint) / 86400 : 1;
+  const maxDays = maxPeriodRaw ? Number(maxPeriodRaw as bigint) / 86400 : 370;
 
   // Anchor the period to CHAIN time, not the browser clock. A machine whose clock lags the
   // chain would otherwise compute a `periodEnd` the contract reads as too near and reject,
@@ -367,7 +379,14 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
     }
   };
 
-  const periodOk = Number(days) >= minDays;
+  // `Number('')` is 0 and `Number('30d')` is NaN; both fail these comparisons, which is why the
+  // bounds are written as assertions about the value rather than as negated rejections.
+  const dayCount = Number(days);
+  const periodTooShort = !(dayCount >= minDays);
+  // The chain compares `periodEnd - periodStart` against MAX_PERIOD, and this form sets that
+  // span to exactly `days`, so the field maps one-to-one onto the contract's bound.
+  const periodTooLong = dayCount > maxDays;
+  const periodOk = !periodTooShort && !periodTooLong;
   const valid = !!workerAddress && parsedWage > 0n && periodOk && tokenOk;
 
   return (
@@ -423,7 +442,8 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
 
         <Field label={`${t('employer:open.wageLabel')} (${symbol})`} value={wage} onChange={setWage} placeholder="1.5" mono />
         <Field label={`${t('employer:open.endLabel')} (${t('common:units.perMonth')})`} value={days} onChange={setDays} placeholder="30" mono />
-        {!periodOk && <p className="text-xs text-vermil">{t('employer:open.minPeriod', {count: minDays})}</p>}
+        {periodTooShort && <p className="text-xs text-vermil">{t('employer:open.minPeriod', {count: minDays})}</p>}
+        {periodTooLong && <p className="text-xs text-vermil">{t('employer:open.maxPeriod', {count: maxDays})}</p>}
         <Button variant="cheong" full disabled={!valid} loading={pending} onClick={open}>
           {t('employer:open.submit')}
         </Button>
