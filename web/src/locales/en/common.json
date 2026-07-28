@@ -11,6 +11,7 @@
     "connecting": "Connecting…",
     "disconnect": "Disconnect",
     "wrongNetwork": "Switch to GIWA",
+    "noWallet": "Install a wallet",
     "menu": "Menu"
   },
   "lang": {
@@ -86,10 +87,14 @@
     "docsLink": "GIWA Docs",
     "faucet": "Faucet",
     "explorer": "Explorer",
+    "contracts": "Contracts",
     "rights": "An open wage-arrears evidence protocol."
   },
   "network": {
     "banner": "You're viewing GIWA Sepolia testnet data.",
-    "wrongNetworkBody": "This app runs on GIWA Sepolia. Switch networks to continue."
+    "wrongNetworkBody": "This app runs on GIWA Sepolia. Switch networks to continue.",
+    "wrongNetworkTitle": "Wrong network",
+    "wrongNetworkDetail": "Your wallet is on chain {{current}}. IMGEUM signs on {{chain}} ({{chainId}}) — transactions are blocked until you switch.",
+    "switching": "Switching…"
   }
 }

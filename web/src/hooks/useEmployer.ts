@@ -1,5 +1,6 @@
 import {useReadContract} from 'wagmi';
 import {useImgeum} from './useImgeum';
+import {ACTIVE_CHAIN} from '../config/giwa';
 import type {Address} from '../lib/vault';
 
 export interface EmployerProfile {
@@ -20,8 +21,11 @@ export function useEmployer(address?: Address) {
   const {registry, isDeployed, attesterId, dojang} = useImgeum();
   const enabled = isDeployed && !!address;
 
+  // Pinned to GIWA (see useVaults) so the console still reads correctly while the wallet is
+  // parked on another network.
   const profile = useReadContract({
     ...(registry as {address: Address; abi: readonly unknown[]}),
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'getEmployer',
     args: address ? [address] : undefined,
     query: {enabled},
@@ -29,6 +33,7 @@ export function useEmployer(address?: Address) {
 
   const score = useReadContract({
     ...(registry as {address: Address; abi: readonly unknown[]}),
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'solvencyScore',
     args: address ? [address] : undefined,
     query: {enabled},
@@ -36,6 +41,7 @@ export function useEmployer(address?: Address) {
 
   const verifiedNow = useReadContract({
     ...(registry as {address: Address; abi: readonly unknown[]}),
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'isCurrentlyDojangVerified',
     args: address ? [address] : undefined,
     query: {enabled},

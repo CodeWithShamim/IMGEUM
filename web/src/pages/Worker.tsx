@@ -15,6 +15,7 @@ import {useSecondsClock} from '../hooks/useClock';
 import {useLang} from '../hooks/useLang';
 import {withdrawableAt, vaultState, isNative, type Vault, type Address} from '../lib/vault';
 import {formatKRW, formatToken} from '../lib/format';
+import {ACTIVE_CHAIN, GIWA_BLOCK_TIME_MS} from '../config/giwa';
 import type {Abi} from 'viem';
 
 export default function Worker() {
@@ -28,10 +29,15 @@ export default function Worker() {
   const streamRef = useRef<WageStreamHandle>(null);
 
   // Live event subscription: pulse the stream when the employer funds (spec §4).
+  // Pinned to GIWA and polled: the public RPC is HTTP-only, so a filter-based watch would be
+  // silently dropped by any node that doesn't keep filters alive.
   useWatchContractEvent({
     address: vaultContract?.address as Address | undefined,
     abi: vaultContract?.abi as Abi | undefined,
+    chainId: ACTIVE_CHAIN.id,
     eventName: 'VaultFunded',
+    poll: true,
+    pollingInterval: GIWA_BLOCK_TIME_MS * 2,
     enabled: isDeployed && !!vaultContract,
     onLogs: () => {
       streamRef.current?.burst();

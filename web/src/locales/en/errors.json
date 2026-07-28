@@ -17,5 +17,11 @@
   "nothingToWithdraw": "Nothing available to withdraw.",
   "resolveFailed": "Couldn't resolve that up.id name.",
   "txFailed": "Transaction failed on-chain.",
-  "loadFailed": "Couldn't load on-chain data."
+  "loadFailed": "Couldn't load on-chain data.",
+  "txTimeout": "Transaction sent but not confirmed yet — check the explorer.",
+  "unsettledShortfall": "Settle the outstanding shortfall before closing this vault.",
+  "vaultClosed": "This vault is already closed.",
+  "noSuchVault": "No such vault or record.",
+  "notWorker": "Only the assigned worker can do this.",
+  "paused": "The protocol is paused right now."
 }

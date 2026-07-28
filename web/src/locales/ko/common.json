@@ -11,6 +11,7 @@
     "connecting": "연결 중…",
     "disconnect": "연결 해제",
     "wrongNetwork": "GIWA로 전환",
+    "noWallet": "지갑 설치하기",
     "menu": "메뉴"
   },
   "lang": {
@@ -86,10 +87,14 @@
     "docsLink": "GIWA 문서",
     "faucet": "포셋",
     "explorer": "익스플로러",
+    "contracts": "컨트랙트",
     "rights": "누구나 열람 가능한 임금체불 증빙 프로토콜."
   },
   "network": {
     "banner": "GIWA 세폴리아 테스트넷 데이터를 보고 있습니다.",
-    "wrongNetworkBody": "이 앱은 GIWA 세폴리아에서 동작합니다. 계속하려면 네트워크를 전환하세요."
+    "wrongNetworkBody": "이 앱은 GIWA 세폴리아에서 동작합니다. 계속하려면 네트워크를 전환하세요.",
+    "wrongNetworkTitle": "잘못된 네트워크",
+    "wrongNetworkDetail": "지갑이 체인 {{current}}에 연결되어 있습니다. IMGEUM은 {{chain}}({{chainId}})에서 서명합니다 — 전환하기 전까지 트랜잭션이 차단됩니다.",
+    "switching": "전환 중…"
   }
 }

@@ -12,7 +12,7 @@ import {Loader} from '../components/motion/Loader';
 import {EASE} from '../components/motion/ease';
 import {usePrefersReducedMotion} from '../hooks/usePrefersReducedMotion';
 import {formatKRW, formatToken, formatDate, shortAddress} from '../lib/format';
-import {explorerAddress, DOJANG, GIWA_LINKS} from '../config/giwa';
+import {explorerAddress, DOJANG, GIWA_LINKS, ACTIVE_CHAIN} from '../config/giwa';
 import {isNative, type Address} from '../lib/vault';
 
 interface ArrearsRecord {
@@ -60,6 +60,7 @@ export default function Evidence() {
   const recordOfVault = useReadContract({
     address: attestor?.address as Address | undefined,
     abi: attestor?.abi as Abi | undefined,
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'recordOfVault',
     args: vaultId !== undefined ? [vaultId] : undefined,
     query: {enabled: isDeployed && isVaultRef && vaultId !== undefined},
@@ -77,6 +78,7 @@ export default function Evidence() {
   const verify = useReadContract({
     address: attestor?.address as Address | undefined,
     abi: attestor?.abi as Abi | undefined,
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'verifyRecord',
     args: recordId !== undefined && recordId !== 0n ? [recordId] : undefined,
     query: {enabled: isDeployed && recordId !== undefined && recordId !== 0n},

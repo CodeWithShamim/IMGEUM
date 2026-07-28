@@ -19,7 +19,7 @@ import {useSecondsClock} from '../hooks/useClock';
 import {vaultState, isNative, type Vault, type Address, NATIVE_TOKEN} from '../lib/vault';
 import {formatKRW} from '../lib/format';
 import {useLang} from '../hooks/useLang';
-import {GIWA_LINKS} from '../config/giwa';
+import {GIWA_LINKS, ACTIVE_CHAIN} from '../config/giwa';
 
 export default function Employer() {
   const {t} = useTranslation();
@@ -68,6 +68,7 @@ function RegisterPanel({onDone}: {onDone: () => void}) {
   const verified = useReadContract({
     address: registry?.address as Address,
     abi: registry?.abi as Abi,
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'isCurrentlyDojangVerified',
     args: address ? [address] : undefined,
     query: {enabled: !!registry && !!address},
@@ -80,6 +81,7 @@ function RegisterPanel({onDone}: {onDone: () => void}) {
   const {data: ownedUpId} = useReadContract({
     address: upIdResolver as Address,
     abi: UP_ID_RESOLVER_ABI,
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'reverse',
     args: address ? [address] : undefined,
     query: {enabled: !!upIdResolver && !!address},
@@ -237,6 +239,7 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   const {data: minPeriodRaw} = useReadContract({
     address: vault?.address as Address,
     abi: vault?.abi as Abi,
+    chainId: ACTIVE_CHAIN.id,
     functionName: 'MIN_PERIOD',
     query: {enabled: !!vault},
   });
@@ -245,7 +248,7 @@ function OpenVaultForm({onDone}: {onDone: () => void}) {
   // Anchor the period to CHAIN time, not the browser clock. A machine whose clock lags the
   // chain would otherwise compute a `periodEnd` the contract reads as too near and reject,
   // with no explanation the employer could act on.
-  const {data: block} = useBlock({query: {refetchInterval: 30_000}});
+  const {data: block} = useBlock({chainId: ACTIVE_CHAIN.id, query: {refetchInterval: 30_000}});
 
   const open = async () => {
     if (!vault) return;

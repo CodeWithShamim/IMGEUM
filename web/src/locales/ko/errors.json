@@ -17,5 +17,11 @@
   "nothingToWithdraw": "출금 가능한 금액이 없습니다.",
   "resolveFailed": "해당 up.id 이름을 해석할 수 없습니다.",
   "txFailed": "온체인에서 트랜잭션이 실패했습니다.",
-  "loadFailed": "온체인 데이터를 불러오지 못했습니다."
+  "loadFailed": "온체인 데이터를 불러오지 못했습니다.",
+  "txTimeout": "트랜잭션을 전송했지만 아직 확정되지 않았습니다 — 익스플로러에서 확인하세요.",
+  "unsettledShortfall": "볼트를 닫기 전에 미지급 부족분을 정산하세요.",
+  "vaultClosed": "이미 닫힌 볼트입니다.",
+  "noSuchVault": "해당 볼트 또는 기록이 없습니다.",
+  "notWorker": "지정된 노동자만 실행할 수 있습니다.",
+  "paused": "프로토콜이 현재 일시 중지되었습니다."
 }

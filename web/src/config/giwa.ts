@@ -29,19 +29,31 @@ const GIWA_SEPOLIA_EXPLORER = 'https://sepolia-explorer.giwa.io';
  */
 export const GIWA_BLOCK_TIME_MS = 1000;
 
-// Allow overriding the RPC via env (docs note the public endpoints are rate-limited and not
-// for production), but default to the official one so a fresh clone works out of the box.
-const RPC_HTTP = import.meta.env.VITE_GIWA_RPC_URL ?? GIWA_SEPOLIA_RPC_HTTP;
-const FLASHBLOCKS_RPC = import.meta.env.VITE_GIWA_FLASHBLOCKS_RPC_URL ?? GIWA_SEPOLIA_FLASHBLOCKS_RPC;
+/**
+ * Allow overriding the RPC via env (docs note the public endpoints are rate-limited and not
+ * for production), but default to the official one so a fresh clone works out of the box.
+ *
+ * These are the endpoints THIS APP reads through. They are deliberately kept off the chain
+ * definition below: `wallet_addEthereumChain` hands whatever is in `rpcUrls.default` to the
+ * user's wallet, and a deployment running on a keyed/private RPC must not push that URL —
+ * complete with its credentials — into every visitor's MetaMask.
+ */
+export const APP_RPC_HTTP = import.meta.env.VITE_GIWA_RPC_URL ?? GIWA_SEPOLIA_RPC_HTTP;
+export const APP_FLASHBLOCKS_RPC =
+  import.meta.env.VITE_GIWA_FLASHBLOCKS_RPC_URL ?? GIWA_SEPOLIA_FLASHBLOCKS_RPC;
 
-/** viem chain definition for GIWA Sepolia, built from the connect docs. */
+/**
+ * viem chain definition for GIWA Sepolia, built from the connect docs.
+ * Carries the PUBLIC endpoints only — this object is what gets proposed to the wallet when
+ * GIWA Sepolia has to be added to it.
+ */
 export const giwaSepolia = defineChain({
   id: GIWA_SEPOLIA_CHAIN_ID,
   name: 'GIWA Sepolia',
   nativeCurrency: {name: 'Ether', symbol: 'ETH', decimals: 18},
   rpcUrls: {
-    default: {http: [RPC_HTTP]},
-    flashblocks: {http: [FLASHBLOCKS_RPC]},
+    default: {http: [GIWA_SEPOLIA_RPC_HTTP]},
+    flashblocks: {http: [GIWA_SEPOLIA_FLASHBLOCKS_RPC]},
   },
   blockExplorers: {
     default: {name: 'GIWA Sepolia Explorer', url: GIWA_SEPOLIA_EXPLORER},
@@ -50,6 +62,24 @@ export const giwaSepolia = defineChain({
 });
 
 export const ACTIVE_CHAIN = giwaSepolia;
+
+/**
+ * Exactly what IMGEUM proposes when the wallet has never heard of GIWA Sepolia, passed to
+ * wagmi's `switchChain` so the `wallet_addEthereumChain` fallback is explicit rather than
+ * derived. Public RPC + public explorer, never the env override.
+ * Source: https://docs.giwa.io/get-started/connect-to-giwa.md
+ */
+export const ADD_CHAIN_PARAMS = (): {
+  chainName: string;
+  nativeCurrency: {name: string; symbol: string; decimals: number};
+  rpcUrls: string[];
+  blockExplorerUrls: string[];
+} => ({
+  chainName: giwaSepolia.name,
+  nativeCurrency: {...giwaSepolia.nativeCurrency},
+  rpcUrls: [GIWA_SEPOLIA_RPC_HTTP],
+  blockExplorerUrls: [GIWA_SEPOLIA_EXPLORER],
+});
 
 /** External GIWA ecosystem links used across the UI and docs. */
 export const GIWA_LINKS = {
