@@ -1,13 +1,13 @@
 {
   "91342": {
-    "arrearsAttestor": "0x97f3F3bFA94b7e52153986Af9e90531B554f32f5",
+    "arrearsAttestor": "0x9547C72811d3506498031Fc63E1608098E533f4e",
     "attesterId": "0xaa92f8c143657dde575de430aecaea6ca91f2e6072339b16932d426895d8d678",
     "attesterMode": "faucet",
     "chainId": 91342,
     "dojangVerifier": "0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9",
-    "employerRegistry": "0x2C83c554c2F0c3dbB87B863a2cc88A58C00A2E5a",
-    "upIdResolver": "0x7d455FDBB89dD631F37D6BE152e97b567050ce88",
+    "employerRegistry": "0x0B804D278702Cd51A4Ed6eab6777d3d9574EF735",
+    "upIdResolver": "0x11478539941f278Fe6e91A217D607Ec64c8D0be9",
     "upNameRegistry": "0x091D00004f21eb2Fc30964A8a4995692d9b49628",
-    "wageVault": "0xE7c7a7B326850C0C4360EAb068063CbEe4d9671c"
+    "wageVault": "0x73627942b45c269D670d3C6233A1a0e32584dC0f"
   }
 }

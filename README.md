@@ -55,13 +55,13 @@ Names, `name.up.id`), and a public **pay-reliability score** employers can show 
 
 ---
 
-## Giwa criteria mapping
+## GIWA criteria mapping
 
 | Criterion                     | How IMGEUM answers it                                                                                                                                                                                                                                                                                                            |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Why GIWA specifically**     | The product is only legible on a fast chain. GIWA's **1-second blocks** + **Flashblocks** (200ms preconfirmations) make a per-second wage stream real, not cosmetic. **Dojang Verified Address** gives employer identity a worker can trust; **up.id** gives human-readable addressing. None of this composes on a 12-second L1. |
 | **Originality**               | Not another DeFi primitive. A wage-arrears _evidence_ protocol targeting a specific, documented Korean social problem — with an evidence layer that delivers value even at zero employer adoption.                                                                                                                               |
-| **Feasibility**               | Contracts complete, 125 tests green (unit + fuzz + invariant, >95% line coverage), one-command testnet deploy, full bilingual frontend that builds with zero TypeScript errors.                                                                                                                                                   |
+| **Feasibility**               | Contracts complete, 127 tests green (unit + fuzz + invariant + live-chain fork, >95% line coverage), one-command testnet deploy with source verification done, full bilingual frontend that builds with zero TypeScript errors.                                                                                                                                                   |
 | **Market demand**             | ₩1.78T in annual arrears, 275,000+ workers/year (MOEL 2023). Labor offices, unions, and migrant-worker advocates are concrete first users.                                                                                                                                                                                       |
 | **GIWA Wallet embeddability** | The `/worker` view is designed as a wallet in-app tab: mobile-first, injected-connector-first, one primary action (withdraw), live stream front-and-center.                                                                                                                                                                      |
 
@@ -97,7 +97,7 @@ math + tested invariants, trust model, and threat model.
 ```bash
 cd contracts
 make install          # forge install
-make test             # 125 tests: unit + fuzz + invariant + live-chain fork
+make test             # 127 tests: unit + fuzz + invariant + live-chain fork
 make test-fork        # only the fork suite, against real GIWA Sepolia state
 make coverage         # >95% lines on the three core contracts
 
@@ -155,10 +155,10 @@ Playground](https://sepolia-playground.giwa.io/) ("Dojang 발급").
 
 | Contract | Address |
 | --- | --- |
-| `EmployerRegistry` | [`0xc72127Ef57692f8A6EaD2EeC94d16f110Cfb29D3`](https://sepolia-explorer.giwa.io/address/0xc72127Ef57692f8A6EaD2EeC94d16f110Cfb29D3) |
-| `WageVault` | [`0xd9709AbdbF0E34Ad7575f9C023E217dc448B832f`](https://sepolia-explorer.giwa.io/address/0xd9709AbdbF0E34Ad7575f9C023E217dc448B832f) |
-| `ArrearsAttestor` | [`0xda5ECC649d5A3c304fc0aC47Ee625BFBb4B9d05e`](https://sepolia-explorer.giwa.io/address/0xda5ECC649d5A3c304fc0aC47Ee625BFBb4B9d05e) |
-| `UpIdResolver` | [`0x5eC3638690dB7189d28EEa9eb6699F1Fb7509Fd3`](https://sepolia-explorer.giwa.io/address/0x5eC3638690dB7189d28EEa9eb6699F1Fb7509Fd3) |
+| `EmployerRegistry` | [`0x0B804D278702Cd51A4Ed6eab6777d3d9574EF735`](https://sepolia-explorer.giwa.io/address/0x0B804D278702Cd51A4Ed6eab6777d3d9574EF735) |
+| `WageVault` | [`0x73627942b45c269D670d3C6233A1a0e32584dC0f`](https://sepolia-explorer.giwa.io/address/0x73627942b45c269D670d3C6233A1a0e32584dC0f) |
+| `ArrearsAttestor` | [`0x9547C72811d3506498031Fc63E1608098E533f4e`](https://sepolia-explorer.giwa.io/address/0x9547C72811d3506498031Fc63E1608098E533f4e) |
+| `UpIdResolver` | [`0x11478539941f278Fe6e91A217D607Ec64c8D0be9`](https://sepolia-explorer.giwa.io/address/0x11478539941f278Fe6e91A217D607Ec64c8D0be9) |
 
 Read against GIWA's own contracts, not ours:
 
@@ -183,7 +183,7 @@ Each has a working exploit preserved as a regression test in
 | 3 | `setRecorder(attestor, false)` | One owner transaction permanently disabled arrears attestation, routing around the write-once `setAttestor` guarantee | Recorder grants are irrevocable; `attestArrears` also records history best-effort |
 | 4 | `_safeMint` + pausable `fund` | Smart-account workers could **never** receive evidence; and a pause manufactured arrears against employers who were paying on time | `_mint` (the token is soulbound anyway); `fund` is no longer pausable |
 
-`make test` runs 125 tests — unit, fuzz, invariant, and a fork suite executed against live
+`make test` runs 127 tests — unit, fuzz, invariant, and a fork suite executed against live
 GIWA Sepolia state.
 
 ---
@@ -285,13 +285,13 @@ Status marks are literal. **✅** is in `main` and exercised by a test or a runn
 
 ## Definition of done (spec §9) — status
 
-- ✅ Contracts compile; 125 tests pass (unit + fuzz + invariant); >95% line coverage on core.
+- ✅ Contracts compile; 127 tests pass (unit + fuzz + invariant); >95% line coverage on core.
 - ✅ One-command testnet deploy + Blockscout verification wired per GIWA docs.
 - ✅ Full demo path implemented: register → open vault → fund → stream → withdraw → arrears → evidence.
 - ✅ Zero TypeScript errors; landing chunk ~2 KB gzip (Lighthouse-friendly, code-split).
 - ✅ Every page in KO **and** EN; CI string-check passes (zero untranslated strings).
 - ✅ Every chain constant traceable to an official GIWA doc URL in code comments.
-- ⏳ Live testnet deployment + verified contracts: run `make deploy-testnet` with a funded deployer.
+- ✅ Live testnet deployment + source-verified contracts on GIWA Sepolia (chain 91342).
 
 ---
 

@@ -15,9 +15,16 @@ import {BlockPulse} from '../motion/Loader';
 import type {Address} from '../../lib/vault';
 
 const linkClass = ({isActive}: {isActive: boolean}) =>
-  `px-3 py-1.5 text-sm font-semibold uppercase tracking-wide rounded transition-colors ${
+  `px-2 lg:px-3 py-1.5 text-xs lg:text-sm font-semibold uppercase tracking-wide rounded whitespace-nowrap transition-colors ${
     isActive ? 'text-ink bg-dan-gold' : 'text-hanji/70 hover:text-hanji'
   }`;
+
+/**
+ * Nav-bar sizing for the wallet CTA: compact where the bar is tight, full size once it isn't.
+ * `!` because `Button` hard-codes `px-5 py-3 text-sm` and equal-specificity utilities are
+ * settled by stylesheet order, not by the order they appear in `className`.
+ */
+const navCta = 'min-w-0 max-w-full !px-3 !py-2 !text-xs sm:!px-5 sm:!py-3 sm:!text-sm';
 
 export function Nav() {
   const {t} = useTranslation();
@@ -31,17 +38,20 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-30 border-b-2 border-ink bg-ink/95 backdrop-blur lg:pl-10">
       <nav className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-        <NavLink to="/" className="flex items-center gap-2" aria-label="IMGEUM">
+        {/* `shrink-0`: the wordmark is the one thing in this bar that must never be clipped. */}
+        <NavLink to="/" className="flex shrink-0 items-center gap-2" aria-label="IMGEUM">
           <RoofMark />
           <span className="font-display text-xl font-extrabold tracking-tight">
             {t('common:brand')}
-            <span className="ml-1 hidden align-super text-[0.6rem] font-semibold uppercase tracking-widest text-dan-gold sm:inline">
+            {/* Decorative, and the first thing to go: between md and lg the links and the wallet
+                CTA both need the room more than the tagline does. */}
+            <span className="ml-1 hidden align-super text-[0.6rem] font-semibold uppercase tracking-widest text-dan-gold lg:inline">
               {t('common:brandSub')}
             </span>
           </span>
         </NavLink>
 
-        <div className="mx-2 hidden items-center gap-1 md:flex">
+        <div className="mx-2 hidden shrink-0 items-center gap-1 md:flex">
           <NavLink to="/worker" className={linkClass}>
             {t('common:nav.worker')}
           </NavLink>
@@ -57,19 +67,29 @@ export function Nav() {
           </NavLink>
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <span className="hidden sm:block">
+        {/* Language switching used to look broken here, and the cause was layout, not i18n: the
+            wallet label is the one string in this bar whose width changes with language
+            ("Install a wallet" ↔ "지갑 설치하기" differ by 54px). With the toggle sitting to its
+            left in a right-anchored cluster, every switch slid the toggle out from under the
+            pointer — so the second click, the one switching back, landed on the wallet button
+            and nothing happened.
+            Two rules keep it still: the toggle renders LAST, so its right edge is pinned to the
+            nav's own; and nothing in the bar is allowed to overflow, because the moment it does
+            `ml-auto` collapses and the right edge stops being fixed. Hence `min-w-0` + truncate
+            on the label — a cramped phone bar shortens the wallet CTA rather than pushing the
+            toggle around. */}
+        <div className="ml-auto flex min-w-0 items-center gap-2">
+          <span className="hidden shrink-0 sm:block">
             <BlockPulse />
           </span>
-          <LangToggle />
           {isWrongNetwork ? (
-            <Button variant="vermil" loading={isSwitching} onClick={() => void ensureNetwork()}>
-              {t('common:nav.wrongNetwork')}
+            <Button variant="vermil" className={navCta} loading={isSwitching} onClick={() => void ensureNetwork()}>
+              <span className="truncate">{t('common:nav.wrongNetwork')}</span>
             </Button>
           ) : isConnected ? (
             <button
               onClick={() => disconnect()}
-              className="rounded border-2 border-ink bg-ink-2 px-3 py-2 font-mono text-xs text-hanji hover:border-vermil"
+              className="min-w-0 truncate rounded border-2 border-ink bg-ink-2 px-3 py-2 font-mono text-xs text-hanji hover:border-vermil"
               title={`${address ?? ''} — ${t('common:nav.disconnect')}`}
             >
               {name || shortAddress(address)}
@@ -77,6 +97,9 @@ export function Nav() {
           ) : (
             <ConnectControl />
           )}
+          <span className="shrink-0">
+            <LangToggle />
+          </span>
         </div>
       </nav>
     </header>
@@ -144,26 +167,38 @@ function ConnectControl() {
     }
   };
 
+  // Truncating rather than wrapping, for the same reason the toggle sits last in the bar: a
+  // label that wraps to two lines in one language and one in the other changes the nav's
+  // height, which slides the toggle vertically on a phone.
   if (noWallet) {
     return (
-      <a href={GIWA_LINKS.connectDocs} target="_blank" rel="noreferrer">
-        <Button variant="ghost">{t('common:nav.noWallet')}</Button>
+      <a
+        href={GIWA_LINKS.connectDocs}
+        target="_blank"
+        rel="noreferrer"
+        className="min-w-0"
+        // The longest label in the bar, and the only one narrow phones have to clip.
+        title={t('common:nav.noWallet')}
+      >
+        <Button variant="ghost" className={navCta}>
+          <span className="truncate">{t('common:nav.noWallet')}</span>
+        </Button>
       </a>
     );
   }
 
   if (options.length === 1) {
     return (
-      <Button variant="gold" loading={isPending} onClick={() => void run(options[0])}>
-        {t('common:nav.connect')}
+      <Button variant="gold" className={navCta} loading={isPending} onClick={() => void run(options[0])}>
+        <span className="truncate">{t('common:nav.connect')}</span>
       </Button>
     );
   }
 
   return (
-    <div ref={wrapRef} className="relative">
-      <Button variant="gold" loading={isPending} onClick={() => setOpen((v) => !v)}>
-        {t('common:nav.connect')}
+    <div ref={wrapRef} className="relative min-w-0">
+      <Button variant="gold" className={navCta} loading={isPending} onClick={() => setOpen((v) => !v)}>
+        <span className="truncate">{t('common:nav.connect')}</span>
       </Button>
       {open && (
         <div

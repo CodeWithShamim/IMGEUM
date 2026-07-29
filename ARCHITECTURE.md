@@ -150,7 +150,8 @@ Multiplication precedes division everywhere (truncation ≤ 1 wei). The suite (`
 | Score always in `[0, 1000]`, monotonic in arrears | `testFuzz_score_*` |
 | `arrearsAttested` flag ⇔ evidence record exists | `invariant_attestationConsistency` |
 
-**74 tests, >95% line coverage** on the three core contracts. Invariant runs execute 8,192 calls
+**127 tests, >95% line coverage** on the three core contracts — 116 local (unit, fuzz,
+invariant) plus 11 executed against live GIWA Sepolia state. Invariant runs execute 8,192 calls
 each with zero reverts.
 
 ---

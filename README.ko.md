@@ -52,13 +52,13 @@ IMGEUM은 두 개의 층으로 이뤄집니다.
 
 ---
 
-## Giya 심사 기준 매핑
+## GIWA 심사 기준 매핑
 
 | 기준                 | IMGEUM의 답                                                                                                                                                                                                                                                                                         |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **왜 하필 GIWA인가** | 이 제품은 빠른 체인 위에서만 읽힙니다. GIWA의 **1초 블록** + **Flashblocks**(200ms 사전 확인)가 초당 임금 스트림을 겉치레가 아닌 실제로 만듭니다. **Dojang 검증 주소**는 노동자가 신뢰할 수 있는 사업주 신원을, **up.id**는 사람이 읽을 수 있는 주소를 제공합니다. 12초 L1에서는 성립하지 않습니다. |
 | **독창성**           | 또 하나의 DeFi 프리미티브가 아닙니다. 구체적이고 문서화된 한국 사회 문제를 겨냥한 임금체불 _증빙_ 프로토콜이며, 증빙 계층은 사업주 채택이 0이어도 가치를 냅니다.                                                                                                                                    |
-| **실현 가능성**      | 컨트랙트 완성, 74개 테스트 통과(단위+퍼즈+불변식, 라인 커버리지 95% 이상), 한 줄 명령 테스트넷 배포, TypeScript 오류 0의 완전 이중 언어 프론트엔드.                                                                                                                                                 |
+| **실현 가능성**      | 컨트랙트 완성, 127개 테스트 통과(단위+퍼즈+불변식+라이브 체인 포크, 라인 커버리지 95% 이상), 한 줄 명령 테스트넷 배포·소스 검증 완료, TypeScript 오류 0의 완전 이중 언어 프론트엔드.                                                                                                                                                 |
 | **시장 수요**        | 연 1조 7,800억 원 체불, 연 27만 5천 명 이상(고용노동부 2023). 노동청, 노조, 이주노동자 지원단체가 구체적 초기 사용자입니다.                                                                                                                                                                         |
 | **GIWA 지갑 임베드** | `/worker` 화면은 지갑 인앱 탭으로 설계되었습니다: 모바일 우선, injected 커넥터 우선, 단일 주요 동작(출금), 스트림 전면 배치.                                                                                                                                                                        |
 
@@ -69,9 +69,9 @@ IMGEUM은 두 개의 층으로 이뤄집니다.
 ```
 imgeum/
 ├── contracts/          Foundry 프로젝트 (Solidity ^0.8.28, OpenZeppelin v5)
-│   ├── src/            EmployerRegistry · WageVault · ArrearsAttestor · GiwaConstants
-│   │   ├── interfaces/ IDojangVerifier · IUpIdResolver · I{EmployerRegistry,WageVault}
-│   ├── test/           단위 · 퍼즈 · 불변식 스위트
+│   ├── src/            EmployerRegistry · WageVault · ArrearsAttestor · UpIdResolver · GiwaConstants
+│   │   └── interfaces/ IDojangVerifier · IUpIdResolver · IUpNameRegistry · I{EmployerRegistry,WageVault}
+│   ├── test/           단위 · 퍼즈 · 불변식 · 포크(라이브 GIWA 세폴리아) 스위트
 │   ├── script/         Deploy.s.sol (환경변수 기반, deployments/<chainId>.json 기록)
 │   └── Makefile        make test / coverage / deploy-testnet
 └── web/                Vite + React 18 + TS + Tailwind + wagmi/viem + framer-motion
@@ -93,11 +93,14 @@ imgeum/
 ```bash
 cd contracts
 make install          # forge install
-make test             # 74개 테스트: 단위 + 퍼즈 + 불변식
+make test             # 127개 테스트: 단위 + 퍼즈 + 불변식 + 라이브 체인 포크
+make test-fork        # 포크 스위트만, 실제 GIWA 세폴리아 상태 대상
 make coverage         # 핵심 3개 컨트랙트 라인 95% 이상
 
-# GIWA 세폴리아 배포 (데모 모드: 모의 Dojang으로 부스 지갑도 등록 가능)
-cp .env.example .env  # 이후: cast wallet import deployer --interactive
+# GIWA 세폴리아 배포. 신원은 항상 GIWA의 실제 DojangScroll + UPNameRegistry를 사용합니다 —
+# 모의(mock) 모드는 없으며, 대상 체인에 둘 중 하나라도 코드가 없으면 스크립트가 revert 합니다.
+cp .env.example .env      # 이후: cast wallet import deployer --interactive
+make deploy-testnet-dry   # 먼저 실제 체인 상태로 시뮬레이션
 make deploy-testnet
 ```
 
@@ -114,6 +117,48 @@ pnpm dev                          # http://localhost:5173
 pnpm check:i18n                   # EN/KO 대칭성 + 하드코딩 문자열 검사 (CI 게이트)
 pnpm build                        # tsc + vite, TS 오류 0
 ```
+
+---
+
+## 라이브 배포 — GIWA 세폴리아 (체인 ID 91342)
+
+네 개 컨트랙트 모두 배포 및 **소스 검증 완료**. GIWA의 **실제** 신원 인프라에 연결되어 있으며,
+모의(mock) 모드는 존재하지 않습니다. 등록은 라이브 DojangScroll로 게이트되며, 지갑은
+[GIWA 플레이그라운드](https://sepolia-playground.giwa.io/)에서 "Dojang 발급"으로 검증 주소를
+직접 발급받습니다.
+
+| 컨트랙트 | 역할 | 주소 |
+| --- | --- | --- |
+| `EmployerRegistry` | 사업주 신원(Dojang 게이트) + 공개 지급 이력 | [`0x0B804D278702Cd51A4Ed6eab6777d3d9574EF735`](https://sepolia-explorer.giwa.io/address/0x0B804D278702Cd51A4Ed6eab6777d3d9574EF735) |
+| `WageVault` | 노동자별 스트리밍 임금 에스크로 (ETH + ERC-20) | [`0x73627942b45c269D670d3C6233A1a0e32584dC0f`](https://sepolia-explorer.giwa.io/address/0x73627942b45c269D670d3C6233A1a0e32584dC0f) |
+| `ArrearsAttestor` | 무허가 체불 증빙, 소울바운드 ERC-721 | [`0x9547C72811d3506498031Fc63E1608098E533f4e`](https://sepolia-explorer.giwa.io/address/0x9547C72811d3506498031Fc63E1608098E533f4e) |
+| `UpIdResolver` | `name.up.id` 정방향·역방향 해석 | [`0x11478539941f278Fe6e91A217D607Ec64c8D0be9`](https://sepolia-explorer.giwa.io/address/0x11478539941f278Fe6e91A217D607Ec64c8D0be9) |
+
+우리 컨트랙트가 아니라 **GIWA 자체 컨트랙트**를 읽습니다:
+
+| GIWA 컨트랙트 | 주소 | 역할 |
+| --- | --- | --- |
+| `DojangScroll` | `0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9` | 사업주 신원 게이트 |
+| `UPNameRegistry` | `0x091D00004f21eb2Fc30964A8a4995692d9b49628` | `name.up.id` 해석 |
+| Attester | `TESTNET_FAUCET` | 어떤 검증 주소 어테스테이션을 인정할지 |
+
+---
+
+## 보안
+
+모의 모드를 걷어내고 실제 체인에 올리는 과정에서 취약점 4건을 발견·수정했습니다. 각 항목은
+동작하는 익스플로잇 그대로 [`contracts/test/Exploits.t.sol`](./contracts/test/Exploits.t.sol)에
+회귀 테스트로 보존되어 있습니다.
+
+| # | 문제 | 영향 | 수정 |
+| --- | --- | --- | --- |
+| 1 | 라이브 DojangScroll에서 만료·취소된 어테스테이션에 대해 `getVerifiedAddressAttestationUid`가 **revert** (`isVerified`는 `false` 반환) | 검증이 만료된 사업주가 관련된 모든 체불 기록의 `verifyRecord` — 즉 노동청 제출용 증빙 페이지 — 를 백지로 만듦 | 보호된 읽기(`ArrearsAttestor._liveDojangUid`). 동결된 스냅샷이 신원보다 오래 살아남음 |
+| 2 | 최소 지급 주기 부재 | 1 wei 볼트와 통제 지갑으로 만점(1000) 지급 신뢰도를 **6초** 만에 조작 가능 | `WageVault.MIN_PERIOD`. `block.timestamp` 기준 측정이라 백데이팅으로 시간을 되살 수 없음 |
+| 3 | `setRecorder(attestor, false)` | 소유자 트랜잭션 한 번으로 체불 증빙 발행을 영구 무력화, 쓰기 1회 제한인 `setAttestor` 보장을 우회 | recorder 권한 부여는 철회 불가. `attestArrears`도 이력을 best-effort로 기록 |
+| 4 | `_safeMint` + 일시정지 가능한 `fund` | 스마트 계정 노동자가 증빙을 **영영 수령 불가**. 또한 일시정지로 정상 지급 중인 사업주에게 체불을 조작 가능 | `_mint`로 변경(어차피 소울바운드). `fund`는 더 이상 일시정지 대상이 아님 |
+
+`make test`는 127개 테스트를 실행합니다 — 단위·퍼즈·불변식, 그리고 실제 GIWA 세폴리아 상태를
+대상으로 하는 포크 스위트.
 
 ---
 

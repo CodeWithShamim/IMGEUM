@@ -8,7 +8,17 @@ solc = "0.8.28"
 optimizer = true
 optimizer_runs = 200
 via_ir = false
-bytecode_hash = "none"
+# Append the IPFS metadata hash to deployed bytecode (solc's default; this was "none").
+#
+# Not cosmetic. Blockscout and Sourcify can only certify a FULL match when the deployed bytecode
+# carries the metadata hash — that hash is what proves this exact source, compiled with these
+# exact settings, produced these exact bytes. Stripped, the strongest available result is a
+# partial match: the runtime code matches, but nothing pins the compiler input that made it.
+#
+# For a protocol whose entire premise is that a labour office or a court-appointed expert can
+# read the contract and trust it without trusting IMGEUM, "verified" needs to mean the strongest
+# thing the explorer can say. The cost is ~53 bytes of deployed code per contract.
+bytecode_hash = "ipfs"
 evm_version = "cancun"
 fs_permissions = [{access = "read-write", path = "./deployments"}]
 remappings = [

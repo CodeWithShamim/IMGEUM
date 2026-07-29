@@ -6,6 +6,10 @@ import {LANGS} from '../../i18n';
 /**
  * Persistent KO/EN switch — a dancheong-striped pill, active language in dan-gold (spec §6.5).
  * The sliding highlight is the only moving part; text stays put so there's no layout jump.
+ *
+ * Nothing here can guarantee that on its own, though: the control is only as stable as the bar
+ * it sits in, and it was the surrounding nav — not this component — that used to slide it out
+ * from under the pointer on every switch. See the layout note in `Nav`.
  */
 export function LangToggle() {
   const {t} = useTranslation();
@@ -22,9 +26,12 @@ export function LangToggle() {
         return (
           <button
             key={l}
+            type="button"
             onClick={() => setLang(l)}
             aria-pressed={active}
-            className="relative z-10 px-2.5 py-1 text-xs font-bold uppercase"
+            // Fixed width, not padding: "KO" and "EN" measure a hair apart, and the pill has to
+            // be the one element on the page that does not move when you press it.
+            className="relative z-10 w-9 py-1 text-center text-xs font-bold uppercase"
           >
             {active && (
               <motion.span
