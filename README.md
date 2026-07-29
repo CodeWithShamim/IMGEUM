@@ -242,6 +242,17 @@ Status marks are literal. **✅** is in `main` and exercised by a test or a runn
 - ✅ Employer-side arrears history, in the employer's own console. Records are public and
   permanent from the moment anyone attests them, and the company was previously the last party
   able to see them — while being the only party who can settle the outstanding amount.
+- ✅ Embeddable reliability badge ([`/api/badge`](./web/api/badge.ts)) — the score as an SVG an
+  employer pastes into a job posting, a careers page or a README, with the copy-ready snippets on
+  their own profile. It re-reads the contracts on every load, so it cannot become a screenshot of
+  a good week. This is what "employers can show it in job postings" had always meant and never
+  actually supported.
+- ✅ Per-route link previews ([`/api/meta`](./web/api/meta.ts)). A client-rendered SPA serves one
+  `index.html` to every unfurler, so a shared employer profile and a shared evidence record used
+  to preview identically — and, before this, as nothing at all, since `index.html` carried no
+  `og:` tags. Known crawlers are routed by user-agent to a server-rendered card built from live
+  chain state. Still text-only: a per-route preview *image* needs a raster renderer, noted in
+  [`api/meta.ts`](./web/api/meta.ts).
 
 **Money**
 
@@ -276,7 +287,12 @@ Status marks are literal. **✅** is in `main` and exercised by a test or a runn
   one-primary-action for exactly this; the remaining work is their embedding contract.
 - Mainnet deploy with `PROTOCOL_OWNER` set to a multisig.
 - Labour-office and union pilot: evidence-page layout reviewed by a practising 노무사 (certified
-  labour attorney), plus a PDF export alongside the existing print path.
+  labour attorney). ✅ The PDF export that was to accompany it has shipped ahead of the review —
+  the evidence page is now a paged A4 document (`@page`, no field split across a break, the seal
+  and shortfall colours preserved) that saves under a record-numbered filename, and prints the
+  verification URL and full addresses that its on-screen hyperlinks would otherwise lose.
+  Rendered by the browser's own print engine rather than a PDF library, so the Korean is real
+  vector text a case officer can select and search — see [`web/src/lib/print.ts`](./web/src/lib/print.ts).
 - Batch vault opening for employers running payroll across many workers.
 
 **KPI targets:** monthly funded vaults · active workers · attestations minted · transaction volume.
