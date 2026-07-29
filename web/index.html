@@ -8,6 +8,35 @@
       name="description"
       content="IMGEUM (임금 프로토콜) — proof-of-solvency payroll and wage-arrears evidence on the GIWA chain."
     />
+
+    <!--
+      Link-preview defaults for the whole app.
+
+      These are the fallback card. Because this is a client-rendered SPA, every route serves this
+      same file, so a shared employer profile or evidence record would otherwise preview as the
+      generic site: `/api/meta` exists to give those two routes their own title and description,
+      and `vercel.json` routes known unfurlers to it. Anything that slips past that user-agent
+      list lands here, which is a weaker card rather than a broken one.
+
+      No `og:image` yet — see the note in `api/meta.ts` on why a raster is required and what
+      adding one costs.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IMGEUM · 임금 프로토콜" />
+    <meta property="og:title" content="IMGEUM · 임금 프로토콜" />
+    <meta
+      property="og:description"
+      content="지급여력을 급여일 전에 확인하고, 체불을 단 한 번의 트랜잭션으로 증명합니다. GIWA 체인 기반 임금 에스크로와 체불 증빙 프로토콜."
+    />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="IMGEUM · 임금 프로토콜" />
+    <meta
+      name="twitter:description"
+      content="Proof-of-solvency payroll and wage-arrears evidence on the GIWA chain. See employer solvency before payday, and prove non-payment in one transaction."
+    />
+
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230E0B16'/%3E%3Cpath d='M4 12 L16 5 L28 12' fill='none' stroke='%23FFB300' stroke-width='2.5'/%3E%3Crect x='8' y='13' width='16' height='3' fill='%23FFB300'/%3E%3Crect x='8' y='18' width='16' height='3' fill='%23D99700'/%3E%3Crect x='8' y='23' width='16' height='3' fill='%23A87400'/%3E%3C/svg%3E" />
     <!-- Pretendard (Korean web standard) + JetBrains Mono, self-described in CSS with system fallbacks. -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />

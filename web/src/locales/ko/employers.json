@@ -23,5 +23,17 @@
     "arrearsHeading": "체불 기록",
     "arrearsBody": "이 사업주를 상대로 발행된 영구 공개 증빙 기록입니다. 누구나 원본 기록을 열어 GIWA의 컨트랙트에서 직접 재검증할 수 있습니다.",
     "arrearsNone": "이 사업주에 대해 기록된 체불이 한 건도 없습니다."
+  },
+  "share": {
+    "heading": "채용 공고에 신뢰도 표시하기",
+    "body": "불러올 때마다 컨트랙트에서 점수를 직접 읽어오는 이미지입니다. 채용 공고나 회사 소개 페이지, README에 붙여 넣으세요. 좋았던 날의 캡처가 아니라 언제나 현재 기록을 보여줍니다.",
+    "alt": "IMGEUM 임금 신뢰도 점수",
+    "style": {
+      "flat": "배지",
+      "card": "카드"
+    },
+    "formatMarkdown": "Markdown",
+    "formatHtml": "HTML",
+    "formatUrl": "링크"
   }
 }

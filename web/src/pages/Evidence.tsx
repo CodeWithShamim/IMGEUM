@@ -14,6 +14,7 @@ import {usePrefersReducedMotion} from '../hooks/usePrefersReducedMotion';
 import {useAmountFormat} from '../hooks/useToken';
 import {useUpId} from '../hooks/useUpId';
 import {formatDate, shortAddress} from '../lib/format';
+import {printDocument, localDateStamp} from '../lib/print';
 import {explorerAddress, DOJANG, GIWA_LINKS, ACTIVE_CHAIN} from '../config/giwa';
 import type {Address} from '../lib/vault';
 
@@ -167,6 +168,17 @@ function EvidenceDocument({
   const {lang} = useLang();
   const fmt = useAmountFormat(rec.token);
 
+  // Built from the record id, not from `window.location.href`: this URL is printed onto a legal
+  // document, so it has to be the canonical one even when the page was reached as
+  // `/evidence/vault-12` or with a query string appended.
+  const canonicalUrl =
+    typeof window === 'undefined' ? '' : `${window.location.origin}/evidence/${recordId.toString()}`;
+
+  // The filename a labour office ends up filing. Record number and date, in the reader's own
+  // language — see `src/lib/print.ts` for why naming the file is the exporter's real job.
+  const savePdf = () =>
+    printDocument(t('evidence:print.filename', {id: recordId.toString(), date: localDateStamp()}));
+
   // Names as they stand TODAY, which is a different claim from the record's frozen fields and
   // is labelled as such. The worker's name is not snapshotted at all — the contract has no
   // field for it — so a live lookup is the only way this page can name the claimant rather
@@ -208,7 +220,7 @@ function EvidenceDocument({
       </div>
 
       {/* Summary banner. */}
-      <div className={`mt-6 rounded border-2 p-4 ${outstanding > 0n ? 'border-vermil bg-vermil/10' : 'border-cheong-deep bg-cheong-deep/10'}`}>
+      <div className={`print-keep mt-6 rounded border-2 p-4 ${outstanding > 0n ? 'border-vermil bg-vermil/10' : 'border-cheong-deep bg-cheong-deep/10'}`}>
         <div className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-ink/60">
           {t('evidence:fields.shortfall')}
         </div>
@@ -283,6 +295,17 @@ function EvidenceDocument({
             <Button variant="ghost" className="!text-ink !border-ink/40">{t('evidence:verification.vaultLink')}</Button>
           </a>
         </div>
+
+        {/*
+          On paper those two buttons are gone and every hyperlink is just underlined text, so the
+          addresses a verifier needs are spelled out in full instead. A printed evidence page that
+          cannot be traced back to the chain it came from is only a claim.
+        */}
+        <dl className="print-only print-keep mt-3 space-y-1 text-[0.7rem] text-ink/70">
+          <PrintRow label={t('evidence:print.verifyAt')} value={canonicalUrl} />
+          <PrintRow label={t('evidence:print.easContract')} value={DOJANG.eas} />
+          <PrintRow label={t('evidence:print.employerAddress')} value={rec.employer} />
+        </dl>
       </div>
 
       {/* Legal statement — 합니다체 register. */}
@@ -291,12 +314,23 @@ function EvidenceDocument({
         <p className="mt-2 font-semibold">{t('evidence:legal.forOfficial')}</p>
       </div>
 
+      {/* The paper footer: who issued it, and when this particular copy was produced. */}
+      <div className="print-only mt-6 border-t border-ink/30 pt-2 text-[0.65rem] text-ink/60">
+        <span>IMGEUM · 임금 프로토콜</span>
+        <span> · {t('evidence:print.generatedAt', {date: formatDate(BigInt(Math.floor(Date.now() / 1000)), lang)})}</span>
+      </div>
+
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 no-print">
         <p className="text-xs text-ink/50">{t('evidence:legal.printHint')}</p>
         <div className="flex gap-2">
           <ShareButton />
-          <Button variant="cheong" onClick={() => window.print()}>
+          {/* Same print engine behind both — the difference is that the PDF path names the
+              saved file, which is the whole reason a case officer can find it again. */}
+          <Button variant="ghost" className="!text-ink !border-ink/40" onClick={() => window.print()}>
             {t('evidence:printCta')}
+          </Button>
+          <Button variant="cheong" onClick={savePdf}>
+            {t('evidence:pdfCta')}
           </Button>
         </div>
       </div>
@@ -331,7 +365,7 @@ function ShareButton() {
 
 function PaperShell({children}: {children: React.ReactNode}) {
   return (
-    <div className="min-h-screen bg-ink px-4 py-8">
+    <div className="print-shell min-h-screen bg-ink px-4 py-8">
       <div className="print-paper mx-auto max-w-3xl rounded border-2 border-ink bg-hanji p-6 text-ink shadow-hard-ink-lg sm:p-10">
         {children}
       </div>
@@ -341,7 +375,7 @@ function PaperShell({children}: {children: React.ReactNode}) {
 
 function Section({title, children}: {title: string; children: React.ReactNode}) {
   return (
-    <section>
+    <section className="print-keep">
       <h2 className="mb-2 font-display text-xs font-bold uppercase tracking-[0.2em] text-ink/60">{title}</h2>
       <dl className="space-y-1.5">{children}</dl>
     </section>
@@ -375,6 +409,22 @@ function Row({
           val
         )}
       </dd>
+    </div>
+  );
+}
+
+/**
+ * A label and a full, untruncated value, for the print-only block.
+ *
+ * Addresses are never shortened here. On screen `0x1234…abcd` is a courtesy because the full
+ * value is one click away; on paper it is a dead end — nobody can re-verify an attestation from
+ * the first six characters of an address.
+ */
+function PrintRow({label, value}: {label: string; value: string}) {
+  return (
+    <div className="flex gap-2">
+      <dt className="shrink-0 text-ink/50">{label}</dt>
+      <dd className="break-all font-mono">{value}</dd>
     </div>
   );
 }

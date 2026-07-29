@@ -44,8 +44,16 @@
   "legal": {
     "statement": "본 문서는 기록된 시점을 기준으로, 참조된 온체인 볼트를 통해 약정된 임금이 지급 기한까지 전액 예치되지 않았음을 증명합니다. 이 기록은 변경이 불가능하며, 위 노동자에게 양도 불가능한 토큰으로 발행되었습니다.",
     "forOfficial": "고용노동부 또는 법원 제출용.",
-    "printHint": "인쇄 기능으로 두 언어가 포함된 깔끔한 종이 사본을 만드세요."
+    "printHint": "종이 사본은 인쇄를, 제출용 파일은 PDF 저장을 사용하세요. 두 경우 모두 이 기록을 재검증하는 데 필요한 주소가 함께 출력됩니다."
+  },
+  "print": {
+    "verifyAt": "검증 주소",
+    "easContract": "EAS 컨트랙트",
+    "employerAddress": "사업주 주소",
+    "generatedAt": "본 사본 발급 일시 {{date}}",
+    "filename": "IMGEUM_임금체불증빙_제{{id}}호_{{date}}"
   },
   "shareCta": "증빙 링크 공유",
-  "printCta": "증빙 인쇄"
+  "printCta": "증빙 인쇄",
+  "pdfCta": "PDF로 저장"
 }

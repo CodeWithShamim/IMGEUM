@@ -9,6 +9,7 @@ import {Button} from '../components/ui/Button';
 import {Stat} from '../components/ui/Stat';
 import {SolvencyMeter} from '../components/ui/SolvencyMeter';
 import {AddressChip} from '../components/ui/AddressChip';
+import {ShareBadge} from '../components/ui/ShareBadge';
 import {ArrearsList} from '../components/wage/ArrearsList';
 import {useEmployer} from '../hooks/useEmployer';
 import {useUpId} from '../hooks/useUpId';
@@ -40,6 +41,12 @@ export default function EmployerProfile() {
   const {records} = useArrearsRecords(idList);
 
   const p = emp.profile;
+
+  // Built from the address rather than from `window.location.href`, so a link copied off a page
+  // reached with a query string or a trailing slash is still the canonical one an employer can
+  // paste into a posting.
+  const profileUrl =
+    typeof window === 'undefined' ? '' : `${window.location.origin}/employers/${address ?? ''}`;
 
   return (
     <Layout rail={t('common:nav.directory')}>
@@ -117,6 +124,8 @@ export default function EmployerProfile() {
                   <ArrearsList records={records} show="worker" />
                 )}
               </section>
+
+              <ShareBadge address={target as Address} profileUrl={profileUrl} />
             </>
           )}
         </div>

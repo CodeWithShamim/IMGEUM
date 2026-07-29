@@ -4,7 +4,40 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!assets/).*)",
+      "source": "/employers/:address",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|Slack-ImgProxy|LinkedInBot|Discordbot|WhatsApp|TelegramBot|kakaotalk-scrap|KAKAOTALK|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|Yeti|Daumoa|NaverBot|Embedly|Iframely|Pinterest|Mastodon|Bluesky|vkShare|W3C_Validator).*"
+        }
+      ],
+      "destination": "/api/meta?path=/employers/:address"
+    },
+    {
+      "source": "/evidence/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|Slack-ImgProxy|LinkedInBot|Discordbot|WhatsApp|TelegramBot|kakaotalk-scrap|KAKAOTALK|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|Yeti|Daumoa|NaverBot|Embedly|Iframely|Pinterest|Mastodon|Bluesky|vkShare|W3C_Validator).*"
+        }
+      ],
+      "destination": "/api/meta?path=/evidence/:id"
+    },
+    {
+      "source": "/employers",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|Slack-ImgProxy|LinkedInBot|Discordbot|WhatsApp|TelegramBot|kakaotalk-scrap|KAKAOTALK|Applebot|Googlebot|bingbot|redditbot|SkypeUriPreview|Yeti|Daumoa|NaverBot|Embedly|Iframely|Pinterest|Mastodon|Bluesky|vkShare|W3C_Validator).*"
+        }
+      ],
+      "destination": "/api/meta?path=/employers"
+    },
+    {
+      "source": "/((?!assets/|api/).*)",
       "destination": "/index.html"
     }
   ]

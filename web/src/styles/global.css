@@ -84,17 +84,77 @@
   }
 }
 
-/* Print stylesheet for the evidence page: force paper, show both languages, hide chrome. */
+/* Content that exists only on paper / in the exported PDF — see the print block below. */
+.print-only {
+  display: none;
+}
+
+/*
+ * Print stylesheet for the evidence page.
+ *
+ * This is also the PDF exporter (`src/lib/print.ts` explains why there is no PDF library): the
+ * browser's print engine emits vector text with real hangul shaping, so the job here is to make
+ * the output a properly paged A4 document rather than a screenshot of a web page.
+ */
 @media print {
+  @page {
+    size: A4;
+    /* Wide enough to clear every consumer printer's unprintable edge, and to leave room for a
+       hole punch or a staple on a document that gets filed. */
+    margin: 15mm 14mm;
+  }
+
   .no-print {
     display: none !important;
   }
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  /* The dark app shell around the document has no business on paper. */
+  .print-shell {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+  }
+
+  /* The page box supplies the margin now, so the card drops its own frame and inset. */
   .print-paper {
     background: #fff !important;
     color: #000 !important;
     box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  body {
-    background: #fff !important;
+
+  /*
+   * Colour on this document is meaning, not decoration: the vermilion seal says 체불, the banner
+   * says which figure is the unpaid one. Browsers drop background colours when printing unless
+   * told otherwise, which would erase exactly the parts a case officer scans for first.
+   */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* A labelled field split across a page break reads as two different facts. */
+  .print-keep {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* A printed hyperlink is just underlined text; the URLs that matter are spelled out in the
+     print-only verification block instead. */
+  a[href] {
+    text-decoration: none !important;
+    color: inherit !important;
   }
 }

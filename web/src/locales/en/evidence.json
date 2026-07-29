@@ -44,8 +44,16 @@
   "legal": {
     "statement": "This document certifies that as of the recorded timestamp, the wages contracted through the referenced on-chain vault were not fully escrowed by the payout deadline. The record is immutable and was minted as a non-transferable token to the worker named above.",
     "forOfficial": "For submission to the Ministry of Employment and Labor (고용노동부) or a court.",
-    "printHint": "Use Print to produce a clean paper copy (both languages)."
+    "printHint": "Print for a paper copy, or Save as PDF for a file you can attach to a filing. Both include the addresses needed to re-verify this record."
+  },
+  "print": {
+    "verifyAt": "Verify at",
+    "easContract": "EAS contract",
+    "employerAddress": "Employer address",
+    "generatedAt": "This copy generated {{date}}",
+    "filename": "IMGEUM_wage-arrears-evidence_no{{id}}_{{date}}"
   },
   "shareCta": "Share this evidence link",
-  "printCta": "Print evidence"
+  "printCta": "Print evidence",
+  "pdfCta": "Save as PDF"
 }

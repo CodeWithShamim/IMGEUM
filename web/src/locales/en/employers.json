@@ -23,5 +23,17 @@
     "arrearsHeading": "Arrears records",
     "arrearsBody": "Permanent, public evidence records filed against this employer. Anyone can open the underlying record and re-verify it against GIWA's own contracts.",
     "arrearsNone": "No arrears have ever been recorded against this employer."
+  },
+  "share": {
+    "heading": "Show this score in a job posting",
+    "body": "An image that reads the score live from the contracts every time it loads. Paste it into a job posting, a careers page or a README — it always shows the current record, never a screenshot of a good day.",
+    "alt": "IMGEUM pay-reliability score",
+    "style": {
+      "flat": "Badge",
+      "card": "Card"
+    },
+    "formatMarkdown": "Markdown",
+    "formatHtml": "HTML",
+    "formatUrl": "Link"
   }
 }
